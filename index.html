@@ -511,12 +511,12 @@
       Import Three.js and postprocessing modules as ES modules 
       from the unpkg CDN. 
     */
-    import * as THREE from 'https://unpkg.com/three@0.128.0/build/three.module.js?module';
-    import { EffectComposer } from 'https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/EffectComposer.js?module';
-    import { RenderPass } from 'https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/RenderPass.js?module';
-    import { UnrealBloomPass } from 'https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/UnrealBloomPass.js?module';
-    import { ShaderPass } from 'https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/ShaderPass.js?module';
-    import { GlitchPass } from 'https://unpkg.com/three@0.128.0/examples/jsm/postprocessing/GlitchPass.js?module';
+    import * as THREE from 'https://cdn.skypack.dev/three@0.134.0';
+import { EffectComposer } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/ShaderPass.js';
+import { GlitchPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/GlitchPass.js';
 
     /* ------------------ DEVICE DETECTION ------------------ */
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
