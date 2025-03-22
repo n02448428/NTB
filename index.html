@@ -937,22 +937,44 @@ import { GlitchPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/p
       // Randomize button
       document.getElementById('randomizeButton').addEventListener('click', randomizeEffects);
       
-      // Hash functions
-      document.getElementById('copyHash').addEventListener('click', () => {
-        const hashElement = document.getElementById('configHash');
-        hashElement.select();
-        document.execCommand('copy');
-        alert('Hash copied to clipboard!');
-      });
+// Hash functions
+document.getElementById('copyHash').addEventListener('click', async () => {
+  const hashElement = document.getElementById('configHash');
+  const hashText = hashElement.value;
+  
+  try {
+    // Try the modern Clipboard API first
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+      await navigator.clipboard.writeText(hashText);
+      alert('Hash copied to clipboard!');
+    } else {
+      // Fallback for older browsers
+      hashElement.select();
+      hashElement.setSelectionRange(0, 99999); // For mobile devices
+      const successful = document.execCommand('copy');
       
-      document.getElementById('applyHash').addEventListener('click', () => {
-        const hash = document.getElementById('hashInput').value;
-        try {
-          applyConfigFromHash(hash);
-        } catch (e) {
-          alert('Invalid hash format!');
-        }
-      });
+      if (successful) {
+        alert('Hash copied to clipboard!');
+      } else {
+        // If even the fallback fails, show the hash and ask user to copy manually
+        alert(`Copy failed. Please manually copy this hash:\n${hashText}`);
+      }
+    }
+  } catch (err) {
+    // If any errors occur, show the hash to user for manual copying
+    console.error('Copy failed:', err);
+    alert(`Copy failed. Please manually copy this hash:\n${hashText}`);
+  }
+});
+ 
+document.getElementById('applyHash').addEventListener('click', () => {
+  const hash = document.getElementById('hashInput').value;
+  try {
+    applyConfigFromHash(hash);
+  } catch (e) {
+    alert('Invalid hash format!');
+  }
+});
       
       // Keyboard shortcut to toggle effects panel
       document.addEventListener('keydown', (e) => {
