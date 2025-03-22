@@ -1683,33 +1683,17 @@ function decodeHashToConfig(hash) {
   playerBike = new THREE.Group();
   const playerColor = new THREE.Color(effectsConfig.playerColor);
   
-  // Main bike body - thin, wall-like design matching the trail
-  const bikeBodyMaterial = new THREE.MeshPhongMaterial({
+  // Create materials
+  const bikeMaterial = new THREE.MeshPhongMaterial({
     color: playerColor,
     emissive: playerColor,
     emissiveIntensity: 0.8 + (effectsConfig.master * 0.3),
     shininess: 30
   });
   
-  materialsToUpdate.player = bikeBodyMaterial;
+  materialsToUpdate.player = bikeMaterial;
   
-  // Main body - thin wall matching trail dimensions
-  const bikeBody = new THREE.Mesh(
-    new THREE.BoxGeometry(4, 6, 0.5),
-    bikeBodyMaterial
-  );
-  playerBike.add(bikeBody);
-  
-  // Subtle front edge with slight tapering
-  const frontEdge = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 6, 0.75),
-    bikeBodyMaterial
-  );
-  frontEdge.position.set(2.5, 0, 0);
-  playerBike.add(frontEdge);
-  
-  // Edge lighting effect along the perimeter
-  const edgeMaterial = new THREE.MeshPhongMaterial({
+  const glowMaterial = new THREE.MeshPhongMaterial({
     color: playerColor,
     emissive: playerColor,
     emissiveIntensity: 1.5 + (effectsConfig.master * 0.5),
@@ -1717,51 +1701,128 @@ function decodeHashToConfig(hash) {
     opacity: 0.9
   });
   
-  // Top light edge
-  const topEdge = new THREE.Mesh(
-    new THREE.BoxGeometry(4.5, 0.2, 0.6),
-    edgeMaterial
-  );
-  topEdge.position.set(0, 3, 0);
-  playerBike.add(topEdge);
+  // Creating a custom motorcycle shape using multiple geometries
+  // Main body - this will be a custom shape built from several pieces
   
-  // Bottom light edge
-  const bottomEdge = new THREE.Mesh(
-    new THREE.BoxGeometry(4.5, 0.2, 0.6),
-    edgeMaterial
+  // 1. Create front fairing/cowl shape (front curved part)
+  const frontCowl = new THREE.Mesh(
+    new THREE.CylinderGeometry(3, 2.5, 0.5, 8, 1, false, Math.PI, Math.PI),
+    bikeMaterial
   );
-  bottomEdge.position.set(0, -3, 0);
-  playerBike.add(bottomEdge);
+  frontCowl.rotation.set(Math.PI/2, 0, 0);
+  frontCowl.position.set(6, 0, 0);
+  playerBike.add(frontCowl);
   
-  // Front light edge
-  const frontLightEdge = new THREE.Mesh(
-    new THREE.BoxGeometry(0.2, 6, 0.6),
-    edgeMaterial
+  // 2. Main body panel - slightly curved top
+  const mainBody = new THREE.Mesh(
+    new THREE.BoxGeometry(10, 0.5, 5),
+    bikeMaterial
   );
-  frontLightEdge.position.set(2.9, 0, 0);
-  playerBike.add(frontLightEdge);
+  mainBody.position.set(0, 0, 0);
+  playerBike.add(mainBody);
   
-  // Rear light edge
-  const rearLightEdge = new THREE.Mesh(
-    new THREE.BoxGeometry(0.2, 6, 0.6),
-    edgeMaterial
+  // 3. Front fairing extension
+  const frontFairing = new THREE.Mesh(
+    new THREE.BoxGeometry(3, 0.5, 3),
+    bikeMaterial
   );
-  rearLightEdge.position.set(-2, 0, 0);
-  playerBike.add(rearLightEdge);
+  frontFairing.position.set(5, 0, 0);
+  playerBike.add(frontFairing);
   
-  // Glow effect using point lights
+  // 4. Rear cowl curved piece
+  const rearCowl = new THREE.Mesh(
+    new THREE.CylinderGeometry(2.5, 2, 0.5, 8, 1, false, 0, Math.PI),
+    bikeMaterial
+  );
+  rearCowl.rotation.set(Math.PI/2, 0, 0);
+  rearCowl.position.set(-5, 0, 0);
+  playerBike.add(rearCowl);
+  
+  // 5. Lower engine block
+  const engineBlock = new THREE.Mesh(
+    new THREE.BoxGeometry(6, 0.8, 3),
+    bikeMaterial
+  );
+  engineBlock.position.set(0, -1.5, 0);
+  playerBike.add(engineBlock);
+  
+  // 6. Front wheel housing
+  const frontWheel = new THREE.Mesh(
+    new THREE.TorusGeometry(2, 0.6, 8, 16, Math.PI*1.5),
+    bikeMaterial
+  );
+  frontWheel.rotation.set(0, 0, Math.PI/2);
+  frontWheel.position.set(7, -2.5, 0);
+  playerBike.add(frontWheel);
+  
+  // 7. Rear wheel housing
+  const rearWheel = new THREE.Mesh(
+    new THREE.TorusGeometry(2, 0.6, 8, 16, Math.PI*1.5),
+    bikeMaterial
+  );
+  rearWheel.rotation.set(0, 0, Math.PI/2);
+  rearWheel.position.set(-7, -2.5, 0);
+  playerBike.add(rearWheel);
+  
+  // 8. Front fork
+  const frontFork = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 4, 0.5),
+    bikeMaterial
+  );
+  frontFork.position.set(7, -0.5, 0);
+  playerBike.add(frontFork);
+  
+  // 9. Create glowing edges for the bike using thin geometry
+  const edgePositions = [
+    // Top edge
+    { pos: [0, 0.25, 0], scale: [16, 0.1, 5.2] },
+    // Front edge curve approximation
+    { pos: [8, -0.5, 0], scale: [0.1, 3, 3] },
+    // Bottom edge
+    { pos: [0, -3, 0], scale: [18, 0.1, 5.2] },
+    // Rear edge curve approximation
+    { pos: [-8, -0.5, 0], scale: [0.1, 3, 3] }
+  ];
+  
+  edgePositions.forEach(edge => {
+    const edgeGlow = new THREE.Mesh(
+      new THREE.BoxGeometry(edge.scale[0], edge.scale[1], edge.scale[2]),
+      glowMaterial
+    );
+    edgeGlow.position.set(edge.pos[0], edge.pos[1], edge.pos[2]);
+    playerBike.add(edgeGlow);
+  });
+  
+  // Add lighting effects
+  // Center glow
   const centerLight = new THREE.PointLight(playerColor, 1 + (effectsConfig.master * 0.5), 
                                          8 + (effectsConfig.master * 3));
   centerLight.position.set(0, 0, 0);
   playerBike.add(centerLight);
   
-  // Front light for visibility
-  const frontLight = new THREE.PointLight(playerColor, 0.7 + (effectsConfig.master * 0.3), 
-                                        5 + (effectsConfig.master * 2));
-  frontLight.position.set(2.5, 0, 0);
-  playerBike.add(frontLight);
+  // Front headlight
+  const headlight = new THREE.PointLight(0xffffff, 0.7 + (effectsConfig.master * 0.3), 
+                                       20 + (effectsConfig.master * 5));
+  headlight.position.set(8, -1, 0);
+  playerBike.add(headlight);
+  
+  // Engine glow
+  const engineGlow = new THREE.PointLight(0xff8800, 0.5 + (effectsConfig.master * 0.2), 
+                                       5 + (effectsConfig.master * 2));
+  engineGlow.position.set(0, -1.5, 0);
+  playerBike.add(engineGlow);
+  
+  // Tail light
+  const tailLight = new THREE.PointLight(0xff0000, 0.5 + (effectsConfig.master * 0.2), 
+                                      5 + (effectsConfig.master * 2));
+  tailLight.position.set(-8, -1, 0);
+  playerBike.add(tailLight);
 
-  playerBike.position.set(-WORLD_SIZE/4, 3, 0); // Position at the height of the trail
+  // Make the entire bike flat by scaling the z-axis
+  playerBike.scale.set(1, 1, 0.15);
+  
+  // Position bike. The Y position is adjusted to align with the trail
+  playerBike.position.set(-WORLD_SIZE/4, 1.5, 0);
   scene.add(playerBike);
 
   // Player starts facing +X
@@ -1806,31 +1867,15 @@ function createAIBike() {
     }
   };
 
-  // Using same thin wall-like bike design as player, different color
-  const bikeBodyMaterial = new THREE.MeshPhongMaterial({
+  // Create materials
+  const bikeMaterial = new THREE.MeshPhongMaterial({
     color: aiColor,
     emissive: aiColor,
     emissiveIntensity: 0.8 + (effectsConfig.master * 0.3),
     shininess: 30
   });
   
-  // Main body - thin wall matching trail dimensions
-  const bikeBody = new THREE.Mesh(
-    new THREE.BoxGeometry(4, 6, 0.5),
-    bikeBodyMaterial
-  );
-  aiBike.add(bikeBody);
-  
-  // Subtle front edge with slight tapering
-  const frontEdge = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 6, 0.75),
-    bikeBodyMaterial
-  );
-  frontEdge.position.set(2.5, 0, 0);
-  aiBike.add(frontEdge);
-  
-  // Edge lighting effect along the perimeter
-  const edgeMaterial = new THREE.MeshPhongMaterial({
+  const glowMaterial = new THREE.MeshPhongMaterial({
     color: aiColor,
     emissive: aiColor,
     emissiveIntensity: 1.5 + (effectsConfig.master * 0.5),
@@ -1838,53 +1883,128 @@ function createAIBike() {
     opacity: 0.9
   });
   
-  // Top light edge
-  const topEdge = new THREE.Mesh(
-    new THREE.BoxGeometry(4.5, 0.2, 0.6),
-    edgeMaterial
-  );
-  topEdge.position.set(0, 3, 0);
-  aiBike.add(topEdge);
+  // Creating a custom motorcycle shape using multiple geometries - same as player bike
   
-  // Bottom light edge
-  const bottomEdge = new THREE.Mesh(
-    new THREE.BoxGeometry(4.5, 0.2, 0.6),
-    edgeMaterial
+  // 1. Create front fairing/cowl shape (front curved part)
+  const frontCowl = new THREE.Mesh(
+    new THREE.CylinderGeometry(3, 2.5, 0.5, 8, 1, false, Math.PI, Math.PI),
+    bikeMaterial
   );
-  bottomEdge.position.set(0, -3, 0);
-  aiBike.add(bottomEdge);
+  frontCowl.rotation.set(Math.PI/2, 0, 0);
+  frontCowl.position.set(6, 0, 0);
+  aiBike.add(frontCowl);
   
-  // Front light edge
-  const frontLightEdge = new THREE.Mesh(
-    new THREE.BoxGeometry(0.2, 6, 0.6),
-    edgeMaterial
+  // 2. Main body panel - slightly curved top
+  const mainBody = new THREE.Mesh(
+    new THREE.BoxGeometry(10, 0.5, 5),
+    bikeMaterial
   );
-  frontLightEdge.position.set(2.9, 0, 0);
-  aiBike.add(frontLightEdge);
+  mainBody.position.set(0, 0, 0);
+  aiBike.add(mainBody);
   
-  // Rear light edge
-  const rearLightEdge = new THREE.Mesh(
-    new THREE.BoxGeometry(0.2, 6, 0.6),
-    edgeMaterial
+  // 3. Front fairing extension
+  const frontFairing = new THREE.Mesh(
+    new THREE.BoxGeometry(3, 0.5, 3),
+    bikeMaterial
   );
-  rearLightEdge.position.set(-2, 0, 0);
-  aiBike.add(rearLightEdge);
+  frontFairing.position.set(5, 0, 0);
+  aiBike.add(frontFairing);
   
-  // Glow effect using point lights
+  // 4. Rear cowl curved piece
+  const rearCowl = new THREE.Mesh(
+    new THREE.CylinderGeometry(2.5, 2, 0.5, 8, 1, false, 0, Math.PI),
+    bikeMaterial
+  );
+  rearCowl.rotation.set(Math.PI/2, 0, 0);
+  rearCowl.position.set(-5, 0, 0);
+  aiBike.add(rearCowl);
+  
+  // 5. Lower engine block
+  const engineBlock = new THREE.Mesh(
+    new THREE.BoxGeometry(6, 0.8, 3),
+    bikeMaterial
+  );
+  engineBlock.position.set(0, -1.5, 0);
+  aiBike.add(engineBlock);
+  
+  // 6. Front wheel housing
+  const frontWheel = new THREE.Mesh(
+    new THREE.TorusGeometry(2, 0.6, 8, 16, Math.PI*1.5),
+    bikeMaterial
+  );
+  frontWheel.rotation.set(0, 0, Math.PI/2);
+  frontWheel.position.set(7, -2.5, 0);
+  aiBike.add(frontWheel);
+  
+  // 7. Rear wheel housing
+  const rearWheel = new THREE.Mesh(
+    new THREE.TorusGeometry(2, 0.6, 8, 16, Math.PI*1.5),
+    bikeMaterial
+  );
+  rearWheel.rotation.set(0, 0, Math.PI/2);
+  rearWheel.position.set(-7, -2.5, 0);
+  aiBike.add(rearWheel);
+  
+  // 8. Front fork
+  const frontFork = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 4, 0.5),
+    bikeMaterial
+  );
+  frontFork.position.set(7, -0.5, 0);
+  aiBike.add(frontFork);
+  
+  // 9. Create glowing edges for the bike using thin geometry
+  const edgePositions = [
+    // Top edge
+    { pos: [0, 0.25, 0], scale: [16, 0.1, 5.2] },
+    // Front edge curve approximation
+    { pos: [8, -0.5, 0], scale: [0.1, 3, 3] },
+    // Bottom edge
+    { pos: [0, -3, 0], scale: [18, 0.1, 5.2] },
+    // Rear edge curve approximation
+    { pos: [-8, -0.5, 0], scale: [0.1, 3, 3] }
+  ];
+  
+  edgePositions.forEach(edge => {
+    const edgeGlow = new THREE.Mesh(
+      new THREE.BoxGeometry(edge.scale[0], edge.scale[1], edge.scale[2]),
+      glowMaterial
+    );
+    edgeGlow.position.set(edge.pos[0], edge.pos[1], edge.pos[2]);
+    aiBike.add(edgeGlow);
+  });
+  
+  // Add lighting effects
+  // Center glow
   const centerLight = new THREE.PointLight(aiColor, 1 + (effectsConfig.master * 0.5), 
-                                        8 + (effectsConfig.master * 3));
+                                         8 + (effectsConfig.master * 3));
   centerLight.position.set(0, 0, 0);
   aiBike.add(centerLight);
   
-  // Front light for visibility
-  const frontLight = new THREE.PointLight(aiColor, 0.7 + (effectsConfig.master * 0.3), 
-                                        5 + (effectsConfig.master * 2));
-  frontLight.position.set(2.5, 0, 0);
-  aiBike.add(frontLight);
+  // Front headlight
+  const headlight = new THREE.PointLight(0xffffff, 0.7 + (effectsConfig.master * 0.3), 
+                                       20 + (effectsConfig.master * 5));
+  headlight.position.set(8, -1, 0);
+  aiBike.add(headlight);
+  
+  // Engine glow
+  const engineGlow = new THREE.PointLight(0xff8800, 0.5 + (effectsConfig.master * 0.2), 
+                                       5 + (effectsConfig.master * 2));
+  engineGlow.position.set(0, -1.5, 0);
+  aiBike.add(engineGlow);
+  
+  // Tail light
+  const tailLight = new THREE.PointLight(0xff0000, 0.5 + (effectsConfig.master * 0.2), 
+                                      5 + (effectsConfig.master * 2));
+  tailLight.position.set(-8, -1, 0);
+  aiBike.add(tailLight);
 
+  // Make the entire bike flat by scaling the z-axis
+  aiBike.scale.set(1, 1, 0.15);
+  
   // Randomize starting position a bit for each AI
   const startOffset = aiIndex * 20;
-  aiBike.position.set(WORLD_SIZE/4, 3, startOffset - (aiBikes.length * 10)); // Position at the height of the trail
+  aiBike.position.set(WORLD_SIZE/4, 1.5, startOffset - (aiBikes.length * 10));
   scene.add(aiBike);
 
   aiBikes.push(aiBike);
@@ -1994,8 +2114,9 @@ function createAIBike() {
     /* ------------------ TRAILS ------------------ */
     function addPlayerTrail() {
   const playerColor = new THREE.Color(effectsConfig.playerColor);
-  // Create a tall, thin trail segment matching bike dimensions
-  const geometry = new THREE.BoxGeometry(2, 6, 0.5);
+  
+  // Create a thin flat wall trail
+  const geometry = new THREE.BoxGeometry(2, 5, 0.15);
   const material = new THREE.MeshPhongMaterial({
     color: playerColor,
     emissive: playerColor,
@@ -2003,9 +2124,10 @@ function createAIBike() {
     transparent: true,
     opacity: 0.8
   });
+  
   const segment = new THREE.Mesh(geometry, material);
   segment.position.copy(playerBike.position);
-  // No need to adjust y position as the bike is now at the correct height
+  segment.position.y = 1.5; // Keep consistent with bike height
   
   // Align trail with bike direction
   segment.rotation.y = Math.atan2(playerDirection.z, playerDirection.x);
@@ -2021,8 +2143,8 @@ function createAIBike() {
 }
 
 function addAITrail(aiBike) {
-  // Create a tall, thin trail segment matching bike dimensions
-  const geometry = new THREE.BoxGeometry(2, 6, 0.5);
+  // Create a thin flat wall trail
+  const geometry = new THREE.BoxGeometry(2, 5, 0.15);
   const material = new THREE.MeshPhongMaterial({
     color: aiBike.userData.color,
     emissive: aiBike.userData.color,
@@ -2030,9 +2152,10 @@ function addAITrail(aiBike) {
     transparent: true,
     opacity: 0.8
   });
+  
   const segment = new THREE.Mesh(geometry, material);
   segment.position.copy(aiBike.position);
-  // No need to adjust y position as the bike is now at the correct height
+  segment.position.y = 1.5; // Keep consistent with bike height
   
   // Align trail with bike direction
   segment.rotation.y = Math.atan2(aiBike.userData.direction.z, aiBike.userData.direction.x);
@@ -2421,7 +2544,7 @@ function addAITrail(aiBike) {
       }
 
       // Handle player turn
-function handlePlayerTurn(direction) {
+      function handlePlayerTurn(direction) {
   if (direction === 'left') {
     playerDirection.set(playerDirection.z, 0, -playerDirection.x);
     playerBike.userData.targetTilt = 0.3; // Tilt right for left turn (banking)
