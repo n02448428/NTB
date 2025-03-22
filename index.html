@@ -372,7 +372,7 @@
   <div id="gameContainer"></div>
   
   <div id="aiCounter">
-    AIs: <span id="aiCount">1</span> | Gen: <span id="aiGeneration">1</span>
+    AIs: <span id="aiCount">1</span> | Gen: <span id="aiGeneration">1</span> | Trail: <span id="trailCounter">0</span>
   </div>
   
   <div id="gameOver">
@@ -752,6 +752,7 @@ import { GlitchPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/p
 
     let playerBike, playerDirection, playerTrail = [];
     let playerTailLength = 5;
+    let trailCounter = 0; 
 
     let aiBikes = [];  // Array to hold multiple AI bikes
     let aiGeneration = 1;
@@ -2374,6 +2375,8 @@ function addAITrail(aiBike) {
           if (powerup.userData.light) scene.remove(powerup.userData.light);
           powerups.splice(i, 1);
           playerTailLength += 5;
+          trailCounter += 1;
+          document.getElementById('trailCounter').textContent = trailCounter;
           setTimeout(createPowerup, 2000);
           continue;
         }
@@ -2493,6 +2496,8 @@ function handlePlayerTurn(direction) {
       // Reset game variables
       aiGeneration = 1;
       playerTailLength = 5;
+      trailCounter = 0;
+      document.getElementById('trailCounter').textContent = trailCounter;
       isGameOver = false;
       
       if (isPaused) {
