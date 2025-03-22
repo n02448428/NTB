@@ -1684,90 +1684,97 @@ function decodeHashToConfig(hash) {
   const playerColor = new THREE.Color(effectsConfig.playerColor);
   
   // Create materials
-  // Black material for the bike body - completely black with no reflections
-  const blackMaterial = new THREE.MeshBasicMaterial({
-    color: 0x000000,
-    transparent: true,
-    opacity: 0.8
-  });
-  
-  // Glowing edge material
-  const glowMaterial = new THREE.MeshBasicMaterial({
+  // Main bike material - solid neon color
+  const bikeMaterial = new THREE.MeshPhongMaterial({
     color: playerColor,
     emissive: playerColor,
-    emissiveIntensity: 1.5 + (effectsConfig.master * 0.5),
+    emissiveIntensity: 0.8 + (effectsConfig.master * 0.3),
+    shininess: 30
+  });
+  
+  materialsToUpdate.player = bikeMaterial;
+  
+  // White accent material
+  const accentMaterial = new THREE.MeshPhongMaterial({
+    color: 0xffffff,
+    emissive: 0xffffff,
+    emissiveIntensity: 1.0 + (effectsConfig.master * 0.4),
     transparent: false,
     opacity: 1.0
   });
   
-  materialsToUpdate.player = glowMaterial;
-  
   // Create the bike shape - we'll use a custom shape to match the Tron lightcycle
   
-  // 1. Main body - black interior
-  const bodyGeometry = new THREE.BoxGeometry(12, 2.5, 0.5);
-  const mainBody = new THREE.Mesh(bodyGeometry, blackMaterial);
+  // 1. Main body - solid color matching player
+  const bodyGeometry = new THREE.BoxGeometry(12, 2.5, 0.8); // Thicker z-axis
+  const mainBody = new THREE.Mesh(bodyGeometry, bikeMaterial);
   mainBody.position.set(0, 0, 0);
   playerBike.add(mainBody);
   
-  // 2. Front wheel - large circular wheel with glowing outline
-  const frontWheelGeometry = new THREE.RingGeometry(2.4, 2.6, 32);
-  const frontWheel = new THREE.Mesh(frontWheelGeometry, glowMaterial);
+  // 2. Front wheel - large circular wheel
+  const frontWheelGeometry = new THREE.TorusGeometry(2.5, 0.4, 16, 32);
+  const frontWheel = new THREE.Mesh(frontWheelGeometry, bikeMaterial);
   frontWheel.rotation.y = Math.PI/2; // Orient properly
   frontWheel.position.set(6, -0.5, 0);
   playerBike.add(frontWheel);
   
-  // 3. Front wheel spokes - simple lines
-  for (let i = 0; i < 12; i++) {
+  // 3. White accents on front wheel
+  const frontWheelAccent = new THREE.Mesh(
+    new THREE.TorusGeometry(2.5, 0.1, 8, 32),
+    accentMaterial
+  );
+  frontWheelAccent.rotation.y = Math.PI/2;
+  frontWheelAccent.position.set(6, -0.5, 0);
+  playerBike.add(frontWheelAccent);
+  
+  // 4. Front wheel spokes - simple lines
+  for (let i = 0; i < 8; i++) {
     const spokeLine = new THREE.Mesh(
-      new THREE.BoxGeometry(0.05, 2.3, 0.05),
-      glowMaterial
+      new THREE.BoxGeometry(0.1, 2.3, 0.1),
+      accentMaterial
     );
     spokeLine.position.set(6, -0.5, 0);
-    spokeLine.rotation.z = (i / 12) * Math.PI * 2;
+    spokeLine.rotation.z = (i / 8) * Math.PI * 2;
     playerBike.add(spokeLine);
   }
   
-  // 4. Rear wheel - matching the front
-  const rearWheelGeometry = new THREE.RingGeometry(2.4, 2.6, 32);
-  const rearWheel = new THREE.Mesh(rearWheelGeometry, glowMaterial);
+  // 5. Rear wheel - matching the front
+  const rearWheelGeometry = new THREE.TorusGeometry(2.5, 0.4, 16, 32);
+  const rearWheel = new THREE.Mesh(rearWheelGeometry, bikeMaterial);
   rearWheel.rotation.y = Math.PI/2; // Orient properly
   rearWheel.position.set(-5, -0.5, 0);
   playerBike.add(rearWheel);
   
-  // 5. Rear wheel spokes
-  for (let i = 0; i < 12; i++) {
+  // 6. White accents on rear wheel
+  const rearWheelAccent = new THREE.Mesh(
+    new THREE.TorusGeometry(2.5, 0.1, 8, 32),
+    accentMaterial
+  );
+  rearWheelAccent.rotation.y = Math.PI/2;
+  rearWheelAccent.position.set(-5, -0.5, 0);
+  playerBike.add(rearWheelAccent);
+  
+  // 7. Rear wheel spokes
+  for (let i = 0; i < 8; i++) {
     const spokeLine = new THREE.Mesh(
-      new THREE.BoxGeometry(0.05, 2.3, 0.05),
-      glowMaterial
+      new THREE.BoxGeometry(0.1, 2.3, 0.1),
+      accentMaterial
     );
     spokeLine.position.set(-5, -0.5, 0);
-    spokeLine.rotation.z = (i / 12) * Math.PI * 2;
+    spokeLine.rotation.z = (i / 8) * Math.PI * 2;
     playerBike.add(spokeLine);
   }
   
-  // 6. Add the glowing edges that outline the lightcycle
+  // 8. Add white accent edges that outline key parts of the lightcycle
   const edges = [
     // Top line from front wheel to windshield
     { from: [6, 1.5, 0], to: [4, 2.5, 0] },
     // Windshield top line
     { from: [4, 2.5, 0], to: [2, 1.8, 0] },
-    // Top body line
-    { from: [2, 1.8, 0], to: [-1, 1.8, 0] },
-    // Rear sloping top line
-    { from: [-1, 1.8, 0], to: [-5, 1.2, 0] },
-    // Rear vertical line
-    { from: [-5, 1.2, 0], to: [-5, -3.1, 0] },
-    // Bottom line
-    { from: [-5, -3.1, 0], to: [6, -3.1, 0] },
     // Front vertical line
-    { from: [6, -3.1, 0], to: [6, 1.5, 0] },
-    // Front fork
-    { from: [6, 0, 0], to: [4, 0, 0] },
-    // Engine circle approximate (we'll use line segments)
-    { from: [0, 0, 0], to: [2, 0, 0] },
-    // Side body line
-    { from: [-2, 0, 0], to: [-3.5, 0, 0] }
+    { from: [6, 1.5, 0], to: [6, -3, 0] },
+    // Bottom line
+    { from: [-5, -3, 0], to: [6, -3, 0] }
   ];
   
   edges.forEach((edge, index) => {
@@ -1775,10 +1782,10 @@ function decodeHashToConfig(hash) {
     const geometry = new THREE.BoxGeometry(
       Math.sqrt(Math.pow(edge.to[0] - edge.from[0], 2) + Math.pow(edge.to[1] - edge.from[1], 2)), 
       0.15, // Thickness of the line
-      0.1
+      0.2    // Slightly thicker
     );
     
-    const line = new THREE.Mesh(geometry, glowMaterial);
+    const line = new THREE.Mesh(geometry, accentMaterial);
     
     // Position at the midpoint
     line.position.set(
@@ -1794,46 +1801,25 @@ function decodeHashToConfig(hash) {
     playerBike.add(line);
   });
   
-  // 7. Engine central circle
+  // 9. Engine central circle
   const engineRing = new THREE.Mesh(
-    new THREE.RingGeometry(1.0, 1.1, 32),
-    glowMaterial
+    new THREE.TorusGeometry(1.0, 0.3, 16, 32),
+    bikeMaterial
   );
   engineRing.rotation.y = Math.PI/2;
   engineRing.position.set(0, 0, 0);
   playerBike.add(engineRing);
   
-  // 8. Add some diagonal accent lines
-  const accentLines = [
-    { from: [2, 0, 0], to: [3, 1, 0] },
-    { from: [3, 1, 0], to: [4, 1, 0] },
-    { from: [-2, 0, 0], to: [-3, -1, 0] }
-  ];
+  // 10. White accent on engine circle
+  const engineAccent = new THREE.Mesh(
+    new THREE.RingGeometry(0.9, 1.1, 32),
+    accentMaterial
+  );
+  engineAccent.rotation.y = Math.PI/2;
+  engineAccent.position.set(0, 0, 0.1);
+  playerBike.add(engineAccent);
   
-  accentLines.forEach((edge) => {
-    const geometry = new THREE.BoxGeometry(
-      Math.sqrt(Math.pow(edge.to[0] - edge.from[0], 2) + Math.pow(edge.to[1] - edge.from[1], 2)), 
-      0.15, // Thickness of the line
-      0.1
-    );
-    
-    const line = new THREE.Mesh(geometry, glowMaterial);
-    
-    // Position at the midpoint
-    line.position.set(
-      (edge.from[0] + edge.to[0]) / 2,
-      (edge.from[1] + edge.to[1]) / 2,
-      (edge.from[2] + edge.to[2]) / 2
-    );
-    
-    // Rotate to align with the edge
-    const angle = Math.atan2(edge.to[1] - edge.from[1], edge.to[0] - edge.from[0]);
-    line.rotation.z = angle;
-    
-    playerBike.add(line);
-  });
-  
-  // 9. Add lighting effects for glow
+  // 11. Add lighting effects for enhanced glow
   // Main light for overall glow
   const mainLight = new THREE.PointLight(playerColor, 1.5 + (effectsConfig.master * 0.5), 
                                        10 + (effectsConfig.master * 3));
@@ -1851,6 +1837,12 @@ function decodeHashToConfig(hash) {
                                       8 + (effectsConfig.master * 2));
   rearLight.position.set(-5, -0.5, 0);
   playerBike.add(rearLight);
+  
+  // White accent light
+  const accentLight = new THREE.PointLight(0xffffff, 0.8 + (effectsConfig.master * 0.3), 
+                                         6 + (effectsConfig.master * 2));
+  accentLight.position.set(2, 1, 0);
+  playerBike.add(accentLight);
   
   // Red tail light
   const tailLight = new THREE.PointLight(0xff0000, 0.8 + (effectsConfig.master * 0.3), 
@@ -1904,90 +1896,95 @@ function createAIBike() {
     }
   };
 
-  // Create materials
-  // Black material for the bike body - completely black with no reflections
-  const blackMaterial = new THREE.MeshBasicMaterial({
-    color: 0x000000,
-    transparent: true,
-    opacity: 0.8
-  });
-  
-  // Glowing edge material
-  const glowMaterial = new THREE.MeshBasicMaterial({
+  // Create materials - same as player but with AI's unique color
+  const bikeMaterial = new THREE.MeshPhongMaterial({
     color: aiColor,
     emissive: aiColor,
-    emissiveIntensity: 1.5 + (effectsConfig.master * 0.5),
+    emissiveIntensity: 0.8 + (effectsConfig.master * 0.3),
+    shininess: 30
+  });
+  
+  // White accent material
+  const accentMaterial = new THREE.MeshPhongMaterial({
+    color: 0xffffff,
+    emissive: 0xffffff,
+    emissiveIntensity: 1.0 + (effectsConfig.master * 0.4),
     transparent: false,
     opacity: 1.0
   });
   
-  // Create the bike shape - we'll use a custom shape to match the Tron lightcycle
-  // Same structure as player bike
+  // Create the bike shape - same structure as player bike
   
-  // 1. Main body - black interior
-  const bodyGeometry = new THREE.BoxGeometry(12, 2.5, 0.5);
-  const mainBody = new THREE.Mesh(bodyGeometry, blackMaterial);
+  // 1. Main body - solid color matching AI
+  const bodyGeometry = new THREE.BoxGeometry(12, 2.5, 0.8); // Thicker z-axis
+  const mainBody = new THREE.Mesh(bodyGeometry, bikeMaterial);
   mainBody.position.set(0, 0, 0);
   aiBike.add(mainBody);
   
-  // 2. Front wheel - large circular wheel with glowing outline
-  const frontWheelGeometry = new THREE.RingGeometry(2.4, 2.6, 32);
-  const frontWheel = new THREE.Mesh(frontWheelGeometry, glowMaterial);
+  // 2. Front wheel - large circular wheel
+  const frontWheelGeometry = new THREE.TorusGeometry(2.5, 0.4, 16, 32);
+  const frontWheel = new THREE.Mesh(frontWheelGeometry, bikeMaterial);
   frontWheel.rotation.y = Math.PI/2; // Orient properly
   frontWheel.position.set(6, -0.5, 0);
   aiBike.add(frontWheel);
   
-  // 3. Front wheel spokes - simple lines
-  for (let i = 0; i < 12; i++) {
+  // 3. White accents on front wheel
+  const frontWheelAccent = new THREE.Mesh(
+    new THREE.TorusGeometry(2.5, 0.1, 8, 32),
+    accentMaterial
+  );
+  frontWheelAccent.rotation.y = Math.PI/2;
+  frontWheelAccent.position.set(6, -0.5, 0);
+  aiBike.add(frontWheelAccent);
+  
+  // 4. Front wheel spokes - simple lines
+  for (let i = 0; i < 8; i++) {
     const spokeLine = new THREE.Mesh(
-      new THREE.BoxGeometry(0.05, 2.3, 0.05),
-      glowMaterial
+      new THREE.BoxGeometry(0.1, 2.3, 0.1),
+      accentMaterial
     );
     spokeLine.position.set(6, -0.5, 0);
-    spokeLine.rotation.z = (i / 12) * Math.PI * 2;
+    spokeLine.rotation.z = (i / 8) * Math.PI * 2;
     aiBike.add(spokeLine);
   }
   
-  // 4. Rear wheel - matching the front
-  const rearWheelGeometry = new THREE.RingGeometry(2.4, 2.6, 32);
-  const rearWheel = new THREE.Mesh(rearWheelGeometry, glowMaterial);
+  // 5. Rear wheel - matching the front
+  const rearWheelGeometry = new THREE.TorusGeometry(2.5, 0.4, 16, 32);
+  const rearWheel = new THREE.Mesh(rearWheelGeometry, bikeMaterial);
   rearWheel.rotation.y = Math.PI/2; // Orient properly
   rearWheel.position.set(-5, -0.5, 0);
   aiBike.add(rearWheel);
   
-  // 5. Rear wheel spokes
-  for (let i = 0; i < 12; i++) {
+  // 6. White accents on rear wheel
+  const rearWheelAccent = new THREE.Mesh(
+    new THREE.TorusGeometry(2.5, 0.1, 8, 32),
+    accentMaterial
+  );
+  rearWheelAccent.rotation.y = Math.PI/2;
+  rearWheelAccent.position.set(-5, -0.5, 0);
+  aiBike.add(rearWheelAccent);
+  
+  // 7. Rear wheel spokes
+  for (let i = 0; i < 8; i++) {
     const spokeLine = new THREE.Mesh(
-      new THREE.BoxGeometry(0.05, 2.3, 0.05),
-      glowMaterial
+      new THREE.BoxGeometry(0.1, 2.3, 0.1),
+      accentMaterial
     );
     spokeLine.position.set(-5, -0.5, 0);
-    spokeLine.rotation.z = (i / 12) * Math.PI * 2;
+    spokeLine.rotation.z = (i / 8) * Math.PI * 2;
     aiBike.add(spokeLine);
   }
   
-  // 6. Add the glowing edges that outline the lightcycle
+  // 8. Add white accent edges that outline key parts of the lightcycle
   const edges = [
     // Top line from front wheel to windshield
     { from: [6, 1.5, 0], to: [4, 2.5, 0] },
     // Windshield top line
     { from: [4, 2.5, 0], to: [2, 1.8, 0] },
-    // Top body line
-    { from: [2, 1.8, 0], to: [-1, 1.8, 0] },
-    // Rear sloping top line
-    { from: [-1, 1.8, 0], to: [-5, 1.2, 0] },
-    // Rear vertical line
-    { from: [-5, 1.2, 0], to: [-5, -3.1, 0] },
-    // Bottom line
-    { from: [-5, -3.1, 0], to: [6, -3.1, 0] },
     // Front vertical line
-    { from: [6, -3.1, 0], to: [6, 1.5, 0] },
-    // Front fork
-    { from: [6, 0, 0], to: [4, 0, 0] },
-    // Engine circle approximate (we'll use line segments)
-    { from: [0, 0, 0], to: [2, 0, 0] },
-    // Side body line
-    { from: [-2, 0, 0], to: [-3.5, 0, 0] }
+    { from: [6, 1.5, 0], to: [6, -3, 0] },
+    // Bottom line
+    { from: [-5, -3, 0], to: [6, -3, 0] }
   ];
   
   edges.forEach((edge, index) => {
@@ -1995,10 +1992,10 @@ function createAIBike() {
     const geometry = new THREE.BoxGeometry(
       Math.sqrt(Math.pow(edge.to[0] - edge.from[0], 2) + Math.pow(edge.to[1] - edge.from[1], 2)), 
       0.15, // Thickness of the line
-      0.1
+      0.2    // Slightly thicker
     );
     
-    const line = new THREE.Mesh(geometry, glowMaterial);
+    const line = new THREE.Mesh(geometry, accentMaterial);
     
     // Position at the midpoint
     line.position.set(
@@ -2014,46 +2011,25 @@ function createAIBike() {
     aiBike.add(line);
   });
   
-  // 7. Engine central circle
+  // 9. Engine central circle
   const engineRing = new THREE.Mesh(
-    new THREE.RingGeometry(1.0, 1.1, 32),
-    glowMaterial
+    new THREE.TorusGeometry(1.0, 0.3, 16, 32),
+    bikeMaterial
   );
   engineRing.rotation.y = Math.PI/2;
   engineRing.position.set(0, 0, 0);
   aiBike.add(engineRing);
   
-  // 8. Add some diagonal accent lines
-  const accentLines = [
-    { from: [2, 0, 0], to: [3, 1, 0] },
-    { from: [3, 1, 0], to: [4, 1, 0] },
-    { from: [-2, 0, 0], to: [-3, -1, 0] }
-  ];
+  // 10. White accent on engine circle
+  const engineAccent = new THREE.Mesh(
+    new THREE.RingGeometry(0.9, 1.1, 32),
+    accentMaterial
+  );
+  engineAccent.rotation.y = Math.PI/2;
+  engineAccent.position.set(0, 0, 0.1);
+  aiBike.add(engineAccent);
   
-  accentLines.forEach((edge) => {
-    const geometry = new THREE.BoxGeometry(
-      Math.sqrt(Math.pow(edge.to[0] - edge.from[0], 2) + Math.pow(edge.to[1] - edge.from[1], 2)), 
-      0.15, // Thickness of the line
-      0.1
-    );
-    
-    const line = new THREE.Mesh(geometry, glowMaterial);
-    
-    // Position at the midpoint
-    line.position.set(
-      (edge.from[0] + edge.to[0]) / 2,
-      (edge.from[1] + edge.to[1]) / 2,
-      (edge.from[2] + edge.to[2]) / 2
-    );
-    
-    // Rotate to align with the edge
-    const angle = Math.atan2(edge.to[1] - edge.from[1], edge.to[0] - edge.from[0]);
-    line.rotation.z = angle;
-    
-    aiBike.add(line);
-  });
-  
-  // 9. Add lighting effects for glow
+  // 11. Add lighting effects for enhanced glow
   // Main light for overall glow
   const mainLight = new THREE.PointLight(aiColor, 1.5 + (effectsConfig.master * 0.5), 
                                        10 + (effectsConfig.master * 3));
@@ -2072,6 +2048,12 @@ function createAIBike() {
   rearLight.position.set(-5, -0.5, 0);
   aiBike.add(rearLight);
   
+  // White accent light
+  const accentLight = new THREE.PointLight(0xffffff, 0.8 + (effectsConfig.master * 0.3), 
+                                         6 + (effectsConfig.master * 2));
+  accentLight.position.set(2, 1, 0);
+  aiBike.add(accentLight);
+  
   // Red tail light
   const tailLight = new THREE.PointLight(0xff0000, 0.8 + (effectsConfig.master * 0.3), 
                                       5 + (effectsConfig.master * 2));
@@ -2088,6 +2070,7 @@ function createAIBike() {
   
   return aiBike;
 }
+
     /* ------------------ AI SPAWN TIMER ------------------ */
     function startAISpawnTimer() {
       aiTimer = 0;
