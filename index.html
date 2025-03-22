@@ -314,16 +314,17 @@
     }
     
     #creditText {
-      position: fixed;
-      bottom: 5px;
-      left: 0;
-      width: 100%;
-      text-align: center;
-      font-size: 12px;
-      color: rgba(0, 255, 255, 0.7);
-      z-index: 90;
-      pointer-events: none;
-    }
+  position: fixed;
+  bottom: 5px;
+  left: 10px;
+  font-size: 12px;
+  color: #ffffff; /* Use white as the base color for the difference blend */
+  z-index: 90;
+  pointer-events: none;
+  mix-blend-mode: difference; /* This creates the inverse color effect */
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5); /* Optional: adds a slight shadow for better visibility */
+  font-weight: bold; /* Makes the text more visible with the blend mode */
+}
     
     /* Media queries for responsive design */
     @media (max-width: 600px) {
@@ -504,7 +505,7 @@
     </div>
   </div>
   
-  <div id="creditText">@dmitrymakelove</div>
+  <div id="creditText">made by @dmitrymakelove (follow on x)</div>
 
   <script type="module">
     /* 
@@ -2699,6 +2700,6 @@ function decodeHashToConfig(hash) {
     init();
   </script>
 
-  <a target="_blank" href="https://jam.pieter.com" style="font-family: 'system-ui', sans-serif; position: fixed; bottom: -1px; right: -1px; padding: 7px; font-size: 14px; font-weight: bold; background: #fff; color: #000; text-decoration: none; z-index: 10; border-top-left-radius: 12px; z-index: 10000; border: 1px solid #fff;">🕹️ Vibe Jam 2025</a>
+<a target="_blank" href="https://jam.pieter.com" style="font-family: 'system-ui', sans-serif; position: fixed; bottom: -1px; right: -1px; padding: 7px; font-size: 14px; font-weight: bold; background: #fff; color: #000; text-decoration: none; z-index: 10; border-top-left-radius: 12px; z-index: 10000; border: 1px solid #fff;">🕹️ Vibe Jam 2025</a>
 </body>
 </html>
