@@ -1683,7 +1683,7 @@ function decodeHashToConfig(hash) {
   playerBike = new THREE.Group();
   const playerColor = new THREE.Color(effectsConfig.playerColor);
   
-  // Main bike body - thin, sleek design
+  // Main bike body - thin, wall-like design matching the trail
   const bikeBodyMaterial = new THREE.MeshPhongMaterial({
     color: playerColor,
     emissive: playerColor,
@@ -1693,38 +1693,22 @@ function decodeHashToConfig(hash) {
   
   materialsToUpdate.player = bikeBodyMaterial;
   
-  // Main body - thin, elongated form
+  // Main body - thin wall matching trail dimensions
   const bikeBody = new THREE.Mesh(
-    new THREE.BoxGeometry(10, 1.5, 2.5),
+    new THREE.BoxGeometry(4, 6, 0.5),
     bikeBodyMaterial
   );
   playerBike.add(bikeBody);
   
-  // Front taper
-  const frontTaper = new THREE.Mesh(
-    new THREE.BoxGeometry(3, 1.5, 1.8),
+  // Subtle front edge with slight tapering
+  const frontEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 6, 0.75),
     bikeBodyMaterial
   );
-  frontTaper.position.set(6, 0, 0);
-  playerBike.add(frontTaper);
+  frontEdge.position.set(2.5, 0, 0);
+  playerBike.add(frontEdge);
   
-  // Rear taper
-  const rearTaper = new THREE.Mesh(
-    new THREE.BoxGeometry(3, 1.5, 1.8),
-    bikeBodyMaterial
-  );
-  rearTaper.position.set(-6, 0, 0);
-  playerBike.add(rearTaper);
-  
-  // Top ridge - subtle detail
-  const topRidge = new THREE.Mesh(
-    new THREE.BoxGeometry(8, 0.4, 1),
-    bikeBodyMaterial
-  );
-  topRidge.position.set(0, 0.8, 0);
-  playerBike.add(topRidge);
-  
-  // Edge lighting effect using thin boxes along edges
+  // Edge lighting effect along the perimeter
   const edgeMaterial = new THREE.MeshPhongMaterial({
     color: playerColor,
     emissive: playerColor,
@@ -1733,55 +1717,51 @@ function decodeHashToConfig(hash) {
     opacity: 0.9
   });
   
-  // Create light edges along the bike
-  const edges = [
-    // Bottom edges
-    {pos: [0, -0.8, 1.2], scale: [12, 0.2, 0.2]},
-    {pos: [0, -0.8, -1.2], scale: [12, 0.2, 0.2]},
-    // Top edges
-    {pos: [0, 0.8, 1.2], scale: [12, 0.2, 0.2]},
-    {pos: [0, 0.8, -1.2], scale: [12, 0.2, 0.2]},
-    // Front vertical edges
-    {pos: [7, 0, 1.2], scale: [0.2, 1.5, 0.2]},
-    {pos: [7, 0, -1.2], scale: [0.2, 1.5, 0.2]},
-    // Rear vertical edges
-    {pos: [-7, 0, 1.2], scale: [0.2, 1.5, 0.2]},
-    {pos: [-7, 0, -1.2], scale: [0.2, 1.5, 0.2]}
-  ];
+  // Top light edge
+  const topEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(4.5, 0.2, 0.6),
+    edgeMaterial
+  );
+  topEdge.position.set(0, 3, 0);
+  playerBike.add(topEdge);
   
-  edges.forEach(edge => {
-    const edgeLight = new THREE.Mesh(
-      new THREE.BoxGeometry(edge.scale[0], edge.scale[1], edge.scale[2]),
-      edgeMaterial
-    );
-    edgeLight.position.set(edge.pos[0], edge.pos[1], edge.pos[2]);
-    playerBike.add(edgeLight);
-  });
+  // Bottom light edge
+  const bottomEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(4.5, 0.2, 0.6),
+    edgeMaterial
+  );
+  bottomEdge.position.set(0, -3, 0);
+  playerBike.add(bottomEdge);
+  
+  // Front light edge
+  const frontLightEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 6, 0.6),
+    edgeMaterial
+  );
+  frontLightEdge.position.set(2.9, 0, 0);
+  playerBike.add(frontLightEdge);
+  
+  // Rear light edge
+  const rearLightEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 6, 0.6),
+    edgeMaterial
+  );
+  rearLightEdge.position.set(-2, 0, 0);
+  playerBike.add(rearLightEdge);
   
   // Glow effect using point lights
-  const frontLight = new THREE.PointLight(playerColor, 1 + (effectsConfig.master * 0.5), 
+  const centerLight = new THREE.PointLight(playerColor, 1 + (effectsConfig.master * 0.5), 
                                          8 + (effectsConfig.master * 3));
-  frontLight.position.set(5, 0, 0);
+  centerLight.position.set(0, 0, 0);
+  playerBike.add(centerLight);
+  
+  // Front light for visibility
+  const frontLight = new THREE.PointLight(playerColor, 0.7 + (effectsConfig.master * 0.3), 
+                                        5 + (effectsConfig.master * 2));
+  frontLight.position.set(2.5, 0, 0);
   playerBike.add(frontLight);
-  
-  const rearLight = new THREE.PointLight(playerColor, 1 + (effectsConfig.master * 0.5), 
-                                        8 + (effectsConfig.master * 3));
-  rearLight.position.set(-5, 0, 0);
-  playerBike.add(rearLight);
-  
-  // Trail emitter - visible at the rear of the bike
-  const emitter = new THREE.Mesh(
-    new THREE.BoxGeometry(0.5, 1.4, 2.4),
-    new THREE.MeshPhongMaterial({
-      color: playerColor,
-      emissive: playerColor,
-      emissiveIntensity: 1.2 + (effectsConfig.master * 0.5)
-    })
-  );
-  emitter.position.set(-7.2, 0, 0);
-  playerBike.add(emitter);
 
-  playerBike.position.set(-WORLD_SIZE/4, 1.5, 0);
+  playerBike.position.set(-WORLD_SIZE/4, 3, 0); // Position at the height of the trail
   scene.add(playerBike);
 
   // Player starts facing +X
@@ -1826,7 +1806,7 @@ function createAIBike() {
     }
   };
 
-  // Using same bike design as player, different color
+  // Using same thin wall-like bike design as player, different color
   const bikeBodyMaterial = new THREE.MeshPhongMaterial({
     color: aiColor,
     emissive: aiColor,
@@ -1834,38 +1814,22 @@ function createAIBike() {
     shininess: 30
   });
   
-  // Main body - thin, elongated form
+  // Main body - thin wall matching trail dimensions
   const bikeBody = new THREE.Mesh(
-    new THREE.BoxGeometry(10, 1.5, 2.5),
+    new THREE.BoxGeometry(4, 6, 0.5),
     bikeBodyMaterial
   );
   aiBike.add(bikeBody);
   
-  // Front taper
-  const frontTaper = new THREE.Mesh(
-    new THREE.BoxGeometry(3, 1.5, 1.8),
+  // Subtle front edge with slight tapering
+  const frontEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 6, 0.75),
     bikeBodyMaterial
   );
-  frontTaper.position.set(6, 0, 0);
-  aiBike.add(frontTaper);
+  frontEdge.position.set(2.5, 0, 0);
+  aiBike.add(frontEdge);
   
-  // Rear taper
-  const rearTaper = new THREE.Mesh(
-    new THREE.BoxGeometry(3, 1.5, 1.8),
-    bikeBodyMaterial
-  );
-  rearTaper.position.set(-6, 0, 0);
-  aiBike.add(rearTaper);
-  
-  // Top ridge - subtle detail
-  const topRidge = new THREE.Mesh(
-    new THREE.BoxGeometry(8, 0.4, 1),
-    bikeBodyMaterial
-  );
-  topRidge.position.set(0, 0.8, 0);
-  aiBike.add(topRidge);
-  
-  // Edge lighting effect using thin boxes along edges
+  // Edge lighting effect along the perimeter
   const edgeMaterial = new THREE.MeshPhongMaterial({
     color: aiColor,
     emissive: aiColor,
@@ -1874,57 +1838,53 @@ function createAIBike() {
     opacity: 0.9
   });
   
-  // Create light edges along the bike
-  const edges = [
-    // Bottom edges
-    {pos: [0, -0.8, 1.2], scale: [12, 0.2, 0.2]},
-    {pos: [0, -0.8, -1.2], scale: [12, 0.2, 0.2]},
-    // Top edges
-    {pos: [0, 0.8, 1.2], scale: [12, 0.2, 0.2]},
-    {pos: [0, 0.8, -1.2], scale: [12, 0.2, 0.2]},
-    // Front vertical edges
-    {pos: [7, 0, 1.2], scale: [0.2, 1.5, 0.2]},
-    {pos: [7, 0, -1.2], scale: [0.2, 1.5, 0.2]},
-    // Rear vertical edges
-    {pos: [-7, 0, 1.2], scale: [0.2, 1.5, 0.2]},
-    {pos: [-7, 0, -1.2], scale: [0.2, 1.5, 0.2]}
-  ];
+  // Top light edge
+  const topEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(4.5, 0.2, 0.6),
+    edgeMaterial
+  );
+  topEdge.position.set(0, 3, 0);
+  aiBike.add(topEdge);
   
-  edges.forEach(edge => {
-    const edgeLight = new THREE.Mesh(
-      new THREE.BoxGeometry(edge.scale[0], edge.scale[1], edge.scale[2]),
-      edgeMaterial
-    );
-    edgeLight.position.set(edge.pos[0], edge.pos[1], edge.pos[2]);
-    aiBike.add(edgeLight);
-  });
+  // Bottom light edge
+  const bottomEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(4.5, 0.2, 0.6),
+    edgeMaterial
+  );
+  bottomEdge.position.set(0, -3, 0);
+  aiBike.add(bottomEdge);
+  
+  // Front light edge
+  const frontLightEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 6, 0.6),
+    edgeMaterial
+  );
+  frontLightEdge.position.set(2.9, 0, 0);
+  aiBike.add(frontLightEdge);
+  
+  // Rear light edge
+  const rearLightEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 6, 0.6),
+    edgeMaterial
+  );
+  rearLightEdge.position.set(-2, 0, 0);
+  aiBike.add(rearLightEdge);
   
   // Glow effect using point lights
-  const frontLight = new THREE.PointLight(aiColor, 1 + (effectsConfig.master * 0.5), 
+  const centerLight = new THREE.PointLight(aiColor, 1 + (effectsConfig.master * 0.5), 
                                         8 + (effectsConfig.master * 3));
-  frontLight.position.set(5, 0, 0);
+  centerLight.position.set(0, 0, 0);
+  aiBike.add(centerLight);
+  
+  // Front light for visibility
+  const frontLight = new THREE.PointLight(aiColor, 0.7 + (effectsConfig.master * 0.3), 
+                                        5 + (effectsConfig.master * 2));
+  frontLight.position.set(2.5, 0, 0);
   aiBike.add(frontLight);
-  
-  const rearLight = new THREE.PointLight(aiColor, 1 + (effectsConfig.master * 0.5), 
-                                       8 + (effectsConfig.master * 3));
-  rearLight.position.set(-5, 0, 0);
-  aiBike.add(rearLight);
-  
-  // Trail emitter - visible at the rear of the bike
-  const emitter = new THREE.Mesh(
-    new THREE.BoxGeometry(0.5, 1.4, 2.4),
-    new THREE.MeshPhongMaterial({
-      color: aiColor,
-      emissive: aiColor,
-      emissiveIntensity: 1.2 + (effectsConfig.master * 0.5)
-    })
-  );
-  emitter.position.set(-7.2, 0, 0);
-  aiBike.add(emitter);
 
   // Randomize starting position a bit for each AI
   const startOffset = aiIndex * 20;
-  aiBike.position.set(WORLD_SIZE/4, 1.5, startOffset - (aiBikes.length * 10));
+  aiBike.position.set(WORLD_SIZE/4, 3, startOffset - (aiBikes.length * 10)); // Position at the height of the trail
   scene.add(aiBike);
 
   aiBikes.push(aiBike);
@@ -2034,7 +1994,7 @@ function createAIBike() {
     /* ------------------ TRAILS ------------------ */
     function addPlayerTrail() {
   const playerColor = new THREE.Color(effectsConfig.playerColor);
-  // Create a taller, thinner trail segment
+  // Create a tall, thin trail segment matching bike dimensions
   const geometry = new THREE.BoxGeometry(2, 6, 0.5);
   const material = new THREE.MeshPhongMaterial({
     color: playerColor,
@@ -2045,10 +2005,11 @@ function createAIBike() {
   });
   const segment = new THREE.Mesh(geometry, material);
   segment.position.copy(playerBike.position);
-  segment.position.y = 3; // Center height for the wall
+  // No need to adjust y position as the bike is now at the correct height
   
   // Align trail with bike direction
   segment.rotation.y = Math.atan2(playerDirection.z, playerDirection.x);
+  segment.rotation.z = playerBike.rotation.z; // Match bike tilt
   
   scene.add(segment);
 
@@ -2060,7 +2021,7 @@ function createAIBike() {
 }
 
 function addAITrail(aiBike) {
-  // Create a taller, thinner trail segment
+  // Create a tall, thin trail segment matching bike dimensions
   const geometry = new THREE.BoxGeometry(2, 6, 0.5);
   const material = new THREE.MeshPhongMaterial({
     color: aiBike.userData.color,
@@ -2071,10 +2032,11 @@ function addAITrail(aiBike) {
   });
   const segment = new THREE.Mesh(geometry, material);
   segment.position.copy(aiBike.position);
-  segment.position.y = 3; // Center height for the wall
+  // No need to adjust y position as the bike is now at the correct height
   
   // Align trail with bike direction
   segment.rotation.y = Math.atan2(aiBike.userData.direction.z, aiBike.userData.direction.x);
+  segment.rotation.z = aiBike.rotation.z; // Match bike tilt
   
   scene.add(segment);
 
@@ -2084,6 +2046,7 @@ function addAITrail(aiBike) {
     scene.remove(oldest.mesh);
   }
 }
+
 
     /* ------------------ ENHANCED AI LOGIC ------------------ */
     function evaluateDirection(aiBike, direction) {
@@ -2457,7 +2420,8 @@ function addAITrail(aiBike) {
           break;
       }
 
-      function handlePlayerTurn(direction) {
+      // Handle player turn
+function handlePlayerTurn(direction) {
   if (direction === 'left') {
     playerDirection.set(playerDirection.z, 0, -playerDirection.x);
     playerBike.userData.targetTilt = 0.3; // Tilt right for left turn (banking)
@@ -2616,6 +2580,45 @@ function addAITrail(aiBike) {
           learnFromCrash(aiBike, aiCollision.reason);
         }
       }
+
+      function updateBikeTilt() {
+  // Player bike tilting
+  if (playerBike) {
+    // Calculate tilt based on last turn
+    const targetTilt = playerBike.userData.targetTilt;
+    const currentTilt = playerBike.userData.currentTilt;
+    
+    // Smoothly interpolate to target tilt
+    if (Math.abs(targetTilt - currentTilt) > 0.01) {
+      playerBike.userData.currentTilt += (targetTilt - currentTilt) * 0.1;
+    } else {
+      // If close enough, gradually return to neutral
+      playerBike.userData.targetTilt *= 0.95;
+      playerBike.userData.currentTilt = playerBike.userData.targetTilt;
+    }
+    
+    // Apply the tilt rotation
+    playerBike.rotation.z = playerBike.userData.currentTilt;
+  }
+  
+  // AI bikes tilting
+  for (let aiBike of aiBikes) {
+    const targetTilt = aiBike.userData.targetTilt;
+    const currentTilt = aiBike.userData.currentTilt;
+    
+    // Smoothly interpolate to target tilt
+    if (Math.abs(targetTilt - currentTilt) > 0.01) {
+      aiBike.userData.currentTilt += (targetTilt - currentTilt) * 0.1;
+    } else {
+      // If close enough, gradually return to neutral
+      aiBike.userData.targetTilt *= 0.95;
+      aiBike.userData.currentTilt = aiBike.userData.targetTilt;
+    }
+    
+    // Apply the tilt rotation
+    aiBike.rotation.z = aiBike.userData.currentTilt;
+  }
+}
 
       // Check player collisions
       const playerCollision = checkPlayerCollisions();
