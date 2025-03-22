@@ -1683,182 +1683,119 @@ function decodeHashToConfig(hash) {
   playerBike = new THREE.Group();
   const playerColor = new THREE.Color(effectsConfig.playerColor);
   
-  // Create a more detailed bike body
+  // Main bike body - thin, sleek design
   const bikeBodyMaterial = new THREE.MeshPhongMaterial({
     color: playerColor,
     emissive: playerColor,
-    emissiveIntensity: 0.5 + (effectsConfig.master * 0.2),
+    emissiveIntensity: 0.8 + (effectsConfig.master * 0.3),
     shininess: 30
   });
   
   materialsToUpdate.player = bikeBodyMaterial;
   
-  // Main body - slightly tapered
+  // Main body - thin, elongated form
   const bikeBody = new THREE.Mesh(
-    new THREE.BoxGeometry(8, 2, 4),
+    new THREE.BoxGeometry(10, 1.5, 2.5),
     bikeBodyMaterial
   );
   playerBike.add(bikeBody);
   
-  // Front section - angled
-  const frontSection = new THREE.Mesh(
-    new THREE.BoxGeometry(3, 1.5, 3),
+  // Front taper
+  const frontTaper = new THREE.Mesh(
+    new THREE.BoxGeometry(3, 1.5, 1.8),
     bikeBodyMaterial
   );
-  frontSection.position.set(4, 0.5, 0);
-  frontSection.rotation.y = Math.PI * 0.05;
-  playerBike.add(frontSection);
+  frontTaper.position.set(6, 0, 0);
+  playerBike.add(frontTaper);
   
-  // Canopy/cockpit
-  const cockpit = new THREE.Mesh(
-    new THREE.SphereGeometry(1.5, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2),
-    new THREE.MeshPhongMaterial({
-      color: 0x88ccff,
-      transparent: true,
-      opacity: 0.7,
-      emissive: playerColor,
-      emissiveIntensity: 0.1
-    })
+  // Rear taper
+  const rearTaper = new THREE.Mesh(
+    new THREE.BoxGeometry(3, 1.5, 1.8),
+    bikeBodyMaterial
   );
-  cockpit.scale.set(1, 0.7, 1);
-  cockpit.position.set(1, 2, 0);
-  cockpit.rotation.x = -Math.PI / 2;
-  playerBike.add(cockpit);
+  rearTaper.position.set(-6, 0, 0);
+  playerBike.add(rearTaper);
   
-  // Thrusters
-  const thrusterMaterial = new THREE.MeshPhongMaterial({
-    color: 0xffaa33,
-    emissive: 0xff5500,
-    emissiveIntensity: 1 + (effectsConfig.master * 0.5)
-  });
-  
-  // Left thruster
-  const leftThruster = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.7, 0.5, 1.5, 8),
-    thrusterMaterial
+  // Top ridge - subtle detail
+  const topRidge = new THREE.Mesh(
+    new THREE.BoxGeometry(8, 0.4, 1),
+    bikeBodyMaterial
   );
-  leftThruster.position.set(-4.5, -0.2, 1.5);
-  leftThruster.rotation.z = Math.PI/2;
-  playerBike.add(leftThruster);
+  topRidge.position.set(0, 0.8, 0);
+  playerBike.add(topRidge);
   
-  // Right thruster
-  const rightThruster = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.7, 0.5, 1.5, 8),
-    thrusterMaterial
-  );
-  rightThruster.position.set(-4.5, -0.2, -1.5);
-  rightThruster.rotation.z = Math.PI/2;
-  playerBike.add(rightThruster);
-  
-  // Front fork
-  const frontFork = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.5, 0.5, 4, 8),
-    new THREE.MeshPhongMaterial({ color: 0xaaaaaa, metalness: 0.7 })
-  );
-  frontFork.rotation.x = Math.PI/2;
-  frontFork.position.set(5, -1, 0);
-  playerBike.add(frontFork);
-
-  const wheelMaterial = new THREE.MeshPhongMaterial({
-    color: 0x333333,
-    emissive: playerColor,
-    emissiveIntensity: 0.2 + (effectsConfig.master * 0.1)
-  });
-
-  const frontWheel = new THREE.Mesh(
-    new THREE.TorusGeometry(1.5, 0.5, 16, 24),
-    wheelMaterial
-  );
-  frontWheel.rotation.y = Math.PI/2;
-  frontWheel.position.set(5, -2, 0);
-  playerBike.add(frontWheel);
-
-  // Add wheel spokes for detail
-  const spokeMaterial = new THREE.MeshBasicMaterial({ color: 0xcccccc });
-  
-  for (let i = 0; i < 8; i++) {
-    const spoke = new THREE.Mesh(
-      new THREE.BoxGeometry(0.1, 2.5, 0.1),
-      spokeMaterial
-    );
-    spoke.position.set(5, -2, 0);
-    spoke.rotation.set(0, 0, Math.PI * i / 4);
-    playerBike.add(spoke);
-  }
-
-  const rearWheel = new THREE.Mesh(
-    new THREE.TorusGeometry(1.5, 0.5, 16, 24),
-    wheelMaterial
-  );
-  rearWheel.rotation.y = Math.PI/2;
-  rearWheel.position.set(-4, -2, 0);
-  playerBike.add(rearWheel);
-  
-  // Rear wheel spokes
-  for (let i = 0; i < 8; i++) {
-    const spoke = new THREE.Mesh(
-      new THREE.BoxGeometry(0.1, 2.5, 0.1),
-      spokeMaterial
-    );
-    spoke.position.set(-4, -2, 0);
-    spoke.rotation.set(0, 0, Math.PI * i / 4);
-    playerBike.add(spoke);
-  }
-
-  // Energy emitters
-  const emitterMaterial = new THREE.MeshPhongMaterial({
+  // Edge lighting effect using thin boxes along edges
+  const edgeMaterial = new THREE.MeshPhongMaterial({
     color: playerColor,
     emissive: playerColor,
-    emissiveIntensity: 1 + (effectsConfig.master * 0.5)
+    emissiveIntensity: 1.5 + (effectsConfig.master * 0.5),
+    transparent: true,
+    opacity: 0.9
   });
   
-  const leftEmitter = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 0.5),
-    emitterMaterial
+  // Create light edges along the bike
+  const edges = [
+    // Bottom edges
+    {pos: [0, -0.8, 1.2], scale: [12, 0.2, 0.2]},
+    {pos: [0, -0.8, -1.2], scale: [12, 0.2, 0.2]},
+    // Top edges
+    {pos: [0, 0.8, 1.2], scale: [12, 0.2, 0.2]},
+    {pos: [0, 0.8, -1.2], scale: [12, 0.2, 0.2]},
+    // Front vertical edges
+    {pos: [7, 0, 1.2], scale: [0.2, 1.5, 0.2]},
+    {pos: [7, 0, -1.2], scale: [0.2, 1.5, 0.2]},
+    // Rear vertical edges
+    {pos: [-7, 0, 1.2], scale: [0.2, 1.5, 0.2]},
+    {pos: [-7, 0, -1.2], scale: [0.2, 1.5, 0.2]}
+  ];
+  
+  edges.forEach(edge => {
+    const edgeLight = new THREE.Mesh(
+      new THREE.BoxGeometry(edge.scale[0], edge.scale[1], edge.scale[2]),
+      edgeMaterial
+    );
+    edgeLight.position.set(edge.pos[0], edge.pos[1], edge.pos[2]);
+    playerBike.add(edgeLight);
+  });
+  
+  // Glow effect using point lights
+  const frontLight = new THREE.PointLight(playerColor, 1 + (effectsConfig.master * 0.5), 
+                                         8 + (effectsConfig.master * 3));
+  frontLight.position.set(5, 0, 0);
+  playerBike.add(frontLight);
+  
+  const rearLight = new THREE.PointLight(playerColor, 1 + (effectsConfig.master * 0.5), 
+                                        8 + (effectsConfig.master * 3));
+  rearLight.position.set(-5, 0, 0);
+  playerBike.add(rearLight);
+  
+  // Trail emitter - visible at the rear of the bike
+  const emitter = new THREE.Mesh(
+    new THREE.BoxGeometry(0.5, 1.4, 2.4),
+    new THREE.MeshPhongMaterial({
+      color: playerColor,
+      emissive: playerColor,
+      emissiveIntensity: 1.2 + (effectsConfig.master * 0.5)
+    })
   );
-  leftEmitter.position.set(-4.5, -1, 1.5);
-  playerBike.add(leftEmitter);
-  
-  const rightEmitter = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 0.5),
-    emitterMaterial
-  );
-  rightEmitter.position.set(-4.5, -1, -1.5);
-  playerBike.add(rightEmitter);
+  emitter.position.set(-7.2, 0, 0);
+  playerBike.add(emitter);
 
-  // Add accent lights
-  const accentLightLeft = new THREE.PointLight(playerColor, 0.7 + (effectsConfig.master * 0.3), 
-                                         5 + (effectsConfig.master * 2));
-  accentLightLeft.position.set(-4.5, -1, 1.5);
-  playerBike.add(accentLightLeft);
-  
-  const accentLightRight = new THREE.PointLight(playerColor, 0.7 + (effectsConfig.master * 0.3), 
-                                          5 + (effectsConfig.master * 2));
-  accentLightRight.position.set(-4.5, -1, -1.5);
-  playerBike.add(accentLightRight);
-
-  // Main bike light
-  const bikeLight = new THREE.PointLight(playerColor, 1 + (effectsConfig.master * 0.5), 
-                                       10 + (effectsConfig.master * 5));
-  bikeLight.position.set(0, 3, 0);
-  playerBike.add(bikeLight);
-  
-  // Headlight
-  const headlight = new THREE.SpotLight(0xffffff, 1, 100, Math.PI / 6, 0.5);
-  headlight.position.set(5, 0, 0);
-  headlight.target.position.set(20, 0, 0);
-  playerBike.add(headlight);
-  playerBike.add(headlight.target);
-
-  playerBike.position.set(-WORLD_SIZE/4, 2, 0);
+  playerBike.position.set(-WORLD_SIZE/4, 1.5, 0);
   scene.add(playerBike);
 
   // Player starts facing +X
   playerDirection = new THREE.Vector3(1, 0, 0);
+  
+  // Store original rotation for tilt calculations
+  playerBike.userData = playerBike.userData || {};
+  playerBike.userData.originalRotation = new THREE.Euler().copy(playerBike.rotation);
+  playerBike.userData.targetTilt = 0;
+  playerBike.userData.currentTilt = 0;
 }
 
-    /* ------------------ AI BIKE ------------------ */
-    function createAIBike() {
+/* ------------------ AI BIKE ENHANCEMENTS ------------------ */
+function createAIBike() {
   const aiIndex = aiBikes.length;
   const hue = (aiIndex * 60) % 360; // Vary colors for different AIs
   const aiColor = new THREE.Color(`hsl(${hue}, 100%, 50%)`);
@@ -1876,6 +1813,9 @@ function decodeHashToConfig(hash) {
     lastPosition: new THREE.Vector3(),
     crashCount: 0,
     powerupsCollected: 0,
+    originalRotation: new THREE.Euler(0, 0, 0),
+    targetTilt: 0,
+    currentTilt: 0,
     // Individual AI characteristics that evolve
     characteristics: {
       avoidDistance: knowledgeBase.avoidDistance + (Math.random() - 0.5) * 5,
@@ -1886,192 +1826,105 @@ function decodeHashToConfig(hash) {
     }
   };
 
-  // Create a more advanced AI bike based on generation
-  const complexity = Math.min(1, 0.5 + (aiGeneration * 0.1)); // More complex models for higher generations
-  
-  const bikeMaterial = new THREE.MeshPhongMaterial({
+  // Using same bike design as player, different color
+  const bikeBodyMaterial = new THREE.MeshPhongMaterial({
     color: aiColor,
     emissive: aiColor,
-    emissiveIntensity: 0.5 + (effectsConfig.master * 0.2),
-    shininess: 20 + (complexity * 10)
+    emissiveIntensity: 0.8 + (effectsConfig.master * 0.3),
+    shininess: 30
   });
   
-  // Main body with generation-dependent styling
-  let bikeBody;
-  
-  if (aiGeneration > 3) {
-    // Advanced bike body for higher generations
-    bikeBody = new THREE.Mesh(
-      new THREE.BoxGeometry(9, 2, 4),
-      bikeMaterial
-    );
-    
-    // Add extra fins for higher generations
-    const finMaterial = new THREE.MeshPhongMaterial({
-      color: aiColor,
-      emissive: aiColor,
-      emissiveIntensity: 0.7,
-      transparent: true,
-      opacity: 0.8
-    });
-    
-    const leftFin = new THREE.Mesh(
-      new THREE.BoxGeometry(3, 0.5, 1),
-      finMaterial
-    );
-    leftFin.position.set(-2, 1, 2.5);
-    aiBike.add(leftFin);
-    
-    const rightFin = new THREE.Mesh(
-      new THREE.BoxGeometry(3, 0.5, 1),
-      finMaterial
-    );
-    rightFin.position.set(-2, 1, -2.5);
-    aiBike.add(rightFin);
-  } else {
-    // Basic bike body for lower generations
-    bikeBody = new THREE.Mesh(
-      new THREE.BoxGeometry(8, 2.5, 4),
-      bikeMaterial
-    );
-  }
-  
+  // Main body - thin, elongated form
+  const bikeBody = new THREE.Mesh(
+    new THREE.BoxGeometry(10, 1.5, 2.5),
+    bikeBodyMaterial
+  );
   aiBike.add(bikeBody);
   
-  // Front section based on generation
-  const frontSection = new THREE.Mesh(
-    new THREE.ConeGeometry(2, 4, 8, 1, false),
-    bikeMaterial
+  // Front taper
+  const frontTaper = new THREE.Mesh(
+    new THREE.BoxGeometry(3, 1.5, 1.8),
+    bikeBodyMaterial
   );
-  frontSection.rotation.z = -Math.PI/2;
-  frontSection.position.set(6, 0, 0);
-  aiBike.add(frontSection);
+  frontTaper.position.set(6, 0, 0);
+  aiBike.add(frontTaper);
   
-  // Generation-specific canopy
-  if (aiGeneration > 2) {
-    const canopyMaterial = new THREE.MeshPhongMaterial({
-      color: 0x88ccff,
-      transparent: true,
-      opacity: 0.7,
-      emissive: aiColor,
-      emissiveIntensity: 0.2
-    });
-    
-    const canopy = new THREE.Mesh(
-      new THREE.SphereGeometry(1.5, 8, 8, 0, Math.PI * 2, 0, Math.PI / 2),
-      canopyMaterial
-    );
-    canopy.scale.set(1, 0.7, 1);
-    canopy.position.set(1, 2, 0);
-    canopy.rotation.x = -Math.PI / 2;
-    aiBike.add(canopy);
-  }
-
-  // Enhanced thrusters for higher generations
-  const thrusterMaterial = new THREE.MeshPhongMaterial({
-    color: 0xffaa33,
-    emissive: 0xff5500,
-    emissiveIntensity: 0.8 + (aiGeneration * 0.1) + (effectsConfig.master * 0.3)
-  });
-  
-  // Thruster quantity and size based on generation
-  const thrusterSize = 0.5 + (complexity * 0.3);
-  const thrusterCount = aiGeneration > 2 ? 2 : 1;
-  
-  if (thrusterCount > 1) {
-    // Dual thrusters for higher generations
-    const leftThruster = new THREE.Mesh(
-      new THREE.CylinderGeometry(thrusterSize, thrusterSize * 0.7, 1.5, 8),
-      thrusterMaterial
-    );
-    leftThruster.position.set(-4.5, -0.2, 1.5);
-    leftThruster.rotation.z = Math.PI/2;
-    aiBike.add(leftThruster);
-    
-    const rightThruster = new THREE.Mesh(
-      new THREE.CylinderGeometry(thrusterSize, thrusterSize * 0.7, 1.5, 8),
-      thrusterMaterial
-    );
-    rightThruster.position.set(-4.5, -0.2, -1.5);
-    rightThruster.rotation.z = Math.PI/2;
-    aiBike.add(rightThruster);
-  } else {
-    // Single thruster for lower generations
-    const thruster = new THREE.Mesh(
-      new THREE.CylinderGeometry(thrusterSize * 1.2, thrusterSize * 0.8, 2, 8),
-      thrusterMaterial
-    );
-    thruster.position.set(-5, 0, 0);
-    thruster.rotation.z = Math.PI/2;
-    aiBike.add(thruster);
-  }
-
-  // Front fork
-  const frontFork = new THREE.Mesh(
-    new THREE.CylinderGeometry(0.5, 0.5, 4, 8),
-    new THREE.MeshPhongMaterial({ color: 0xaaaaaa })
+  // Rear taper
+  const rearTaper = new THREE.Mesh(
+    new THREE.BoxGeometry(3, 1.5, 1.8),
+    bikeBodyMaterial
   );
-  frontFork.rotation.x = Math.PI/2;
-  frontFork.position.set(4, -1, 0);
-  aiBike.add(frontFork);
-
-  const wheelMaterial = new THREE.MeshPhongMaterial({
-    color: 0x333333,
+  rearTaper.position.set(-6, 0, 0);
+  aiBike.add(rearTaper);
+  
+  // Top ridge - subtle detail
+  const topRidge = new THREE.Mesh(
+    new THREE.BoxGeometry(8, 0.4, 1),
+    bikeBodyMaterial
+  );
+  topRidge.position.set(0, 0.8, 0);
+  aiBike.add(topRidge);
+  
+  // Edge lighting effect using thin boxes along edges
+  const edgeMaterial = new THREE.MeshPhongMaterial({
+    color: aiColor,
     emissive: aiColor,
-    emissiveIntensity: 0.2 + (effectsConfig.master * 0.1)
+    emissiveIntensity: 1.5 + (effectsConfig.master * 0.5),
+    transparent: true,
+    opacity: 0.9
   });
-
-  // More detailed wheels for higher generations
-  const wheelSegments = aiGeneration > 2 ? 16 : 8;
-  const frontWheel = new THREE.Mesh(
-    new THREE.TorusGeometry(1.5, 0.5, wheelSegments, wheelSegments * 2),
-    wheelMaterial
-  );
-  frontWheel.rotation.y = Math.PI/2;
-  frontWheel.position.set(4, -2, 0);
-  aiBike.add(frontWheel);
-
-  const rearWheel = new THREE.Mesh(
-    new THREE.TorusGeometry(1.5, 0.5, wheelSegments, wheelSegments * 2),
-    wheelMaterial
-  );
-  rearWheel.rotation.y = Math.PI/2;
-  rearWheel.position.set(-4, -2, 0);
-  aiBike.add(rearWheel);
-
-  // Engine glow
+  
+  // Create light edges along the bike
+  const edges = [
+    // Bottom edges
+    {pos: [0, -0.8, 1.2], scale: [12, 0.2, 0.2]},
+    {pos: [0, -0.8, -1.2], scale: [12, 0.2, 0.2]},
+    // Top edges
+    {pos: [0, 0.8, 1.2], scale: [12, 0.2, 0.2]},
+    {pos: [0, 0.8, -1.2], scale: [12, 0.2, 0.2]},
+    // Front vertical edges
+    {pos: [7, 0, 1.2], scale: [0.2, 1.5, 0.2]},
+    {pos: [7, 0, -1.2], scale: [0.2, 1.5, 0.2]},
+    // Rear vertical edges
+    {pos: [-7, 0, 1.2], scale: [0.2, 1.5, 0.2]},
+    {pos: [-7, 0, -1.2], scale: [0.2, 1.5, 0.2]}
+  ];
+  
+  edges.forEach(edge => {
+    const edgeLight = new THREE.Mesh(
+      new THREE.BoxGeometry(edge.scale[0], edge.scale[1], edge.scale[2]),
+      edgeMaterial
+    );
+    edgeLight.position.set(edge.pos[0], edge.pos[1], edge.pos[2]);
+    aiBike.add(edgeLight);
+  });
+  
+  // Glow effect using point lights
+  const frontLight = new THREE.PointLight(aiColor, 1 + (effectsConfig.master * 0.5), 
+                                        8 + (effectsConfig.master * 3));
+  frontLight.position.set(5, 0, 0);
+  aiBike.add(frontLight);
+  
+  const rearLight = new THREE.PointLight(aiColor, 1 + (effectsConfig.master * 0.5), 
+                                       8 + (effectsConfig.master * 3));
+  rearLight.position.set(-5, 0, 0);
+  aiBike.add(rearLight);
+  
+  // Trail emitter - visible at the rear of the bike
   const emitter = new THREE.Mesh(
-    new THREE.BoxGeometry(1, 1, 1),
+    new THREE.BoxGeometry(0.5, 1.4, 2.4),
     new THREE.MeshPhongMaterial({
       color: aiColor,
       emissive: aiColor,
-      emissiveIntensity: 1 + (effectsConfig.master * 0.5)
+      emissiveIntensity: 1.2 + (effectsConfig.master * 0.5)
     })
   );
-  emitter.position.set(-4, -1, 0);
+  emitter.position.set(-7.2, 0, 0);
   aiBike.add(emitter);
-
-  // Lights based on generation
-  const lightIntensity = 0.7 + (aiGeneration * 0.1) + (effectsConfig.master * 0.3);
-  const lightRange = 8 + (aiGeneration * 2) + (effectsConfig.master * 3);
-  
-  // Main bike glow
-  const bikeLight = new THREE.PointLight(aiColor, lightIntensity, lightRange);
-  bikeLight.position.set(0, 1, 0);
-  aiBike.add(bikeLight);
-  
-  // Advanced bikes get a headlight
-  if (aiGeneration > 2) {
-    const headlight = new THREE.SpotLight(0xffffff, 0.5, 40, Math.PI / 6, 0.5);
-    headlight.position.set(5, 0, 0);
-    headlight.target.position.set(15, 0, 0);
-    aiBike.add(headlight);
-    aiBike.add(headlight.target);
-  }
 
   // Randomize starting position a bit for each AI
   const startOffset = aiIndex * 20;
-  aiBike.position.set(WORLD_SIZE/4, 2, startOffset - (aiBikes.length * 10));
+  aiBike.position.set(WORLD_SIZE/4, 1.5, startOffset - (aiBikes.length * 10));
   scene.add(aiBike);
 
   aiBikes.push(aiBike);
@@ -2180,47 +2033,57 @@ function decodeHashToConfig(hash) {
 
     /* ------------------ TRAILS ------------------ */
     function addPlayerTrail() {
-      const playerColor = new THREE.Color(effectsConfig.playerColor);
-      const geometry = new THREE.BoxGeometry(3, 1, 3);
-      const material = new THREE.MeshPhongMaterial({
-        color: playerColor,
-        emissive: playerColor,
-        emissiveIntensity: 0.7 + (effectsConfig.master * 0.3),
-        transparent: true,
-        opacity: 0.8
-      });
-      const segment = new THREE.Mesh(geometry, material);
-      segment.position.copy(playerBike.position);
-      segment.position.y = 0.5;
-      scene.add(segment);
+  const playerColor = new THREE.Color(effectsConfig.playerColor);
+  // Create a taller, thinner trail segment
+  const geometry = new THREE.BoxGeometry(2, 6, 0.5);
+  const material = new THREE.MeshPhongMaterial({
+    color: playerColor,
+    emissive: playerColor,
+    emissiveIntensity: 0.7 + (effectsConfig.master * 0.3),
+    transparent: true,
+    opacity: 0.8
+  });
+  const segment = new THREE.Mesh(geometry, material);
+  segment.position.copy(playerBike.position);
+  segment.position.y = 3; // Center height for the wall
+  
+  // Align trail with bike direction
+  segment.rotation.y = Math.atan2(playerDirection.z, playerDirection.x);
+  
+  scene.add(segment);
 
-      playerTrail.push({ mesh: segment, time: clock.getElapsedTime() });
-      if (playerTrail.length > playerTailLength) {
-        const oldest = playerTrail.shift();
-        scene.remove(oldest.mesh);
-      }
-    }
+  playerTrail.push({ mesh: segment, time: clock.getElapsedTime() });
+  if (playerTrail.length > playerTailLength) {
+    const oldest = playerTrail.shift();
+    scene.remove(oldest.mesh);
+  }
+}
 
-    function addAITrail(aiBike) {
-      const geometry = new THREE.BoxGeometry(3, 1, 3);
-      const material = new THREE.MeshPhongMaterial({
-        color: aiBike.userData.color,
-        emissive: aiBike.userData.color,
-        emissiveIntensity: 0.7 + (effectsConfig.master * 0.3),
-        transparent: true,
-        opacity: 0.8
-      });
-      const segment = new THREE.Mesh(geometry, material);
-      segment.position.copy(aiBike.position);
-      segment.position.y = 0.5;
-      scene.add(segment);
+function addAITrail(aiBike) {
+  // Create a taller, thinner trail segment
+  const geometry = new THREE.BoxGeometry(2, 6, 0.5);
+  const material = new THREE.MeshPhongMaterial({
+    color: aiBike.userData.color,
+    emissive: aiBike.userData.color,
+    emissiveIntensity: 0.7 + (effectsConfig.master * 0.3),
+    transparent: true,
+    opacity: 0.8
+  });
+  const segment = new THREE.Mesh(geometry, material);
+  segment.position.copy(aiBike.position);
+  segment.position.y = 3; // Center height for the wall
+  
+  // Align trail with bike direction
+  segment.rotation.y = Math.atan2(aiBike.userData.direction.z, aiBike.userData.direction.x);
+  
+  scene.add(segment);
 
-      aiBike.userData.trail.push({ mesh: segment, time: clock.getElapsedTime() });
-      if (aiBike.userData.trail.length > aiBike.userData.tailLength) {
-        const oldest = aiBike.userData.trail.shift();
-        scene.remove(oldest.mesh);
-      }
-    }
+  aiBike.userData.trail.push({ mesh: segment, time: clock.getElapsedTime() });
+  if (aiBike.userData.trail.length > aiBike.userData.tailLength) {
+    const oldest = aiBike.userData.trail.shift();
+    scene.remove(oldest.mesh);
+  }
+}
 
     /* ------------------ ENHANCED AI LOGIC ------------------ */
     function evaluateDirection(aiBike, direction) {
@@ -2353,6 +2216,16 @@ function decodeHashToConfig(hash) {
                 evaluations.right.score > evaluations.left.score) {
         bestDirection = 'right';
       }
+
+      function handleAITurn(aiBike, direction) {
+  if (direction === 'left') {
+    aiBike.userData.direction.set(-aiBike.userData.direction.z, 0, aiBike.userData.direction.x);
+    aiBike.userData.targetTilt = 0.3; // Tilt right for left turn (banking)
+  } else if (direction === 'right') {
+    aiBike.userData.direction.set(aiBike.userData.direction.z, 0, -aiBike.userData.direction.x);
+    aiBike.userData.targetTilt = -0.3; // Tilt left for right turn (banking)
+  }
+}
 
       // Learn from this decision
       learnFromDecision(aiBike, evaluations, bestDirection);
@@ -2583,6 +2456,16 @@ function decodeHashToConfig(hash) {
           panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
           break;
       }
+
+      function handlePlayerTurn(direction) {
+  if (direction === 'left') {
+    playerDirection.set(playerDirection.z, 0, -playerDirection.x);
+    playerBike.userData.targetTilt = 0.3; // Tilt right for left turn (banking)
+  } else if (direction === 'right') {
+    playerDirection.set(-playerDirection.z, 0, playerDirection.x);
+    playerBike.userData.targetTilt = -0.3; // Tilt left for right turn (banking)
+  }
+}
     }
 
     /* ------------------ WINDOW RESIZE ------------------ */
@@ -2739,6 +2622,46 @@ function decodeHashToConfig(hash) {
       if (playerCollision.collision) {
         gameOver(`YOU CRASHED INTO ${playerCollision.reason.toUpperCase()}!`);
       }
+
+      function updateBikeTilt() {
+  // Player bike tilting
+  if (playerBike) {
+    // Calculate tilt based on last turn
+    const targetTilt = playerBike.userData.targetTilt;
+    const currentTilt = playerBike.userData.currentTilt;
+    
+    // Smoothly interpolate to target tilt
+    if (Math.abs(targetTilt - currentTilt) > 0.01) {
+      playerBike.userData.currentTilt += (targetTilt - currentTilt) * 0.1;
+    } else {
+      // If close enough, gradually return to neutral
+      playerBike.userData.targetTilt *= 0.95;
+      playerBike.userData.currentTilt = playerBike.userData.targetTilt;
+    }
+    
+    // Apply the tilt rotation
+    playerBike.rotation.z = playerBike.userData.currentTilt;
+  }
+  
+  // AI bikes tilting
+  for (let aiBike of aiBikes) {
+    const targetTilt = aiBike.userData.targetTilt;
+    const currentTilt = aiBike.userData.currentTilt;
+    
+    // Smoothly interpolate to target tilt
+    if (Math.abs(targetTilt - currentTilt) > 0.01) {
+      aiBike.userData.currentTilt += (targetTilt - currentTilt) * 0.1;
+    } else {
+      // If close enough, gradually return to neutral
+      aiBike.userData.targetTilt *= 0.95;
+      aiBike.userData.currentTilt = aiBike.userData.targetTilt;
+    }
+    
+    // Apply the tilt rotation
+    aiBike.rotation.z = aiBike.userData.currentTilt;
+  }
+}
+
 
       // Powerups
       checkPowerups();
