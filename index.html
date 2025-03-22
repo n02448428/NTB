@@ -1346,35 +1346,151 @@ document.head.appendChild(style);
       };
     };
 
-    function updateConfigHash() {
-      // Generate a hash/string representation of current config
-      const configStr = JSON.stringify(effectsConfig);
-      const hash = btoa(configStr); // Base64 encode
-      document.getElementById('configHash').value = hash;
-    }
+// Converts config to a compact 20-character hash
+function updateConfigHash() {
+  const hash = encodeConfigToHash(effectsConfig);
+  document.getElementById('configHash').value = hash;
+}
+
+// Applies a config from a compact hash
+function applyConfigFromHash(hash) {
+  try {
+    const config = decodeHashToConfig(hash);
     
-    function applyConfigFromHash(hash) {
-      try {
-        const configStr = atob(hash); // Base64 decode
-        const config = JSON.parse(configStr);
-        
-        // Apply to current config
-        Object.assign(effectsConfig, config);
-        
-        // Update UI
-        updateSliders();
-        
-        // Update effects
-        updateEffects();
-        updateMaterialColors();
-        
-        // Update hash display
-        updateConfigHash();
-      } catch (e) {
-        console.error("Error applying config from hash:", e);
-        throw e; // Re-throw for UI handling
-      }
+    // Apply to current config
+    Object.assign(effectsConfig, config);
+    
+    // Update UI
+    updateSliders();
+    
+    // Update effects
+    updateEffects();
+    updateMaterialColors();
+  } catch (e) {
+    console.error("Error applying config from hash:", e);
+    throw e; // Re-throw for UI handling
+  }
+}
+
+// Compact 20-character encoding function
+function encodeConfigToHash(config) {
+  // Create a 20-character hash
+  let result = '';
+  
+  // 1. First 4 characters: master, bloom, pixel, glitch (1 char each)
+  result += Math.min(35, Math.round(config.master * 9)).toString(36);
+  result += Math.min(35, Math.round(config.bloom * 9)).toString(36);
+  result += Math.min(35, config.pixel).toString(36);
+  result += Math.min(35, Math.round(config.glitch * 9)).toString(36);
+  
+  // 2. Next 2 characters: glitchSeed (0-1295)
+  result += Math.min(1295, config.glitchSeed).toString(36).padStart(2, '0');
+  
+  // 3. Next 3 characters: scanline, speed, wildGlitch
+  result += Math.min(35, Math.round(config.scanline * 9)).toString(36);
+  result += Math.min(35, Math.round(config.speed * 9)).toString(36);
+  result += config.wildGlitch ? '1' : '0';
+  
+  // 4. Next 2 characters: hueShift (0-360 mapped to 0-1295)
+  const hueVal = Math.round(config.hueShift * 1295 / 360);
+  result += Math.min(1295, hueVal).toString(36).padStart(2, '0');
+  
+  // 5. Next 2 characters: saturation, colorPulse
+  result += Math.min(35, Math.round(config.saturation * 9)).toString(36);
+  result += Math.min(35, Math.round(config.colorPulse * 9)).toString(36);
+  
+  // 6. Last 7 characters: player color (3 chars), grid color (4 chars)
+  // For colors, we use 3-4 hex chars as compact representation
+  function encodeColor(color) {
+    // Remove # and compress
+    if (color.length === 7) { // #RRGGBB format
+      // Use 1-digit hex values (0-F)
+      const r = Math.round(parseInt(color.substring(1, 3), 16) / 17).toString(16);
+      const g = Math.round(parseInt(color.substring(3, 5), 16) / 17).toString(16);
+      const b = Math.round(parseInt(color.substring(5, 7), 16) / 17).toString(16);
+      return r + g + b;
     }
+    return color.substring(1); // Already short
+  }
+  
+  result += encodeColor(config.playerColor);
+  
+  // Make grid color 4 chars to reach exactly 20 chars total
+  const gridColorEncoded = encodeColor(config.gridColor);
+  // Pad if needed
+  result += gridColorEncoded.padEnd(4, '0');
+  
+  // Ensure exactly 20 characters
+  return result.substring(0, 20);
+}
+
+// Decoding function
+function decodeHashToConfig(hash) {
+  // Ensure we have exactly 20 characters
+  if (hash.length !== 20) {
+    throw new Error('Invalid hash format: must be exactly 20 characters');
+  }
+  
+  const config = {};
+  
+  // 1. Extract values using the same schema as encoding
+  // (1-indexed for clarity in reading position)
+  //  Pos 1: master
+  //  Pos 2: bloom
+  //  Pos 3: pixel
+  //  Pos 4: glitch
+  //  Pos 5-6: glitchSeed
+  //  Pos 7: scanline
+  //  Pos 8: speed
+  //  Pos 9: wildGlitch
+  //  Pos 10-11: hueShift
+  //  Pos 12: saturation
+  //  Pos 13: colorPulse
+  //  Pos 14-16: playerColor
+  //  Pos 17-20: gridColor
+  
+  // First 4 chars
+  config.master = parseInt(hash[0], 36) / 9;
+  config.bloom = parseInt(hash[1], 36) / 9;
+  config.pixel = parseInt(hash[2], 36);
+  config.glitch = parseInt(hash[3], 36) / 9;
+  
+  // Next 2 chars (glitchSeed)
+  config.glitchSeed = parseInt(hash.substring(4, 6), 36);
+  
+  // Next 3 chars
+  config.scanline = parseInt(hash[6], 36) / 9;
+  config.speed = parseInt(hash[7], 36) / 9;
+  config.wildGlitch = hash[8] === '1';
+  
+  // Next 2 chars (hueShift)
+  const hueVal = parseInt(hash.substring(9, 11), 36);
+  config.hueShift = Math.round(hueVal * 360 / 1295);
+  
+  // Next 2 chars
+  config.saturation = parseInt(hash[11], 36) / 9;
+  config.colorPulse = parseInt(hash[12], 36) / 9;
+  
+  // Decode colors
+  function decodeColor(shortColor) {
+    // Convert 3-4 chars to full hex
+    const r = parseInt(shortColor[0], 16) * 17;
+    const g = parseInt(shortColor[1], 16) * 17;
+    const b = parseInt(shortColor[2], 16) * 17;
+    
+    // Format as #RRGGBB
+    return '#' + 
+      r.toString(16).padStart(2, '0') + 
+      g.toString(16).padStart(2, '0') + 
+      b.toString(16).padStart(2, '0');
+  }
+  
+  // Last 7 chars (3 + 4)
+  config.playerColor = decodeColor(hash.substring(13, 16));
+  config.gridColor = decodeColor(hash.substring(16, 19));
+  
+  return config;
+}
     
     function randomizeEffects() {
       // Generate random values for all effects
