@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>Neon Trailblazer v3</title>
+  <title>Neon Trailblazer</title>
   <style>
     * {
       margin: 0;
@@ -314,28 +314,17 @@
     }
     
     #creditText {
-      position: fixed;
-      bottom: 5px;
-      left: 10px;
-      font-size: 12px;
-      color: #ffffff;
-      z-index: 90;
-      pointer-events: none;
-      mix-blend-mode: difference;
-      text-shadow: 0 0 2px rgba(0, 0, 0, 0.5);
-      font-weight: bold;
-    }
-    
-    #gameToast {
-      animation: fadeInOut 3s ease-in-out;
-    }
-    
-    @keyframes fadeInOut {
-      0% { opacity: 0; transform: translate(-50%, 20px); }
-      10% { opacity: 1; transform: translate(-50%, 0); }
-      90% { opacity: 1; transform: translate(-50%, 0); }
-      100% { opacity: 0; transform: translate(-50%, -20px); }
-    }
+  position: fixed;
+  bottom: 5px;
+  left: 10px;
+  font-size: 12px;
+  color: #ffffff; /* Use white as the base color for the difference blend */
+  z-index: 90;
+  pointer-events: none;
+  mix-blend-mode: difference; /* This creates the inverse color effect */
+  text-shadow: 0 0 2px rgba(0, 0, 0, 0.5); /* Optional: adds a slight shadow for better visibility */
+  font-weight: bold; /* Makes the text more visible with the blend mode */
+}
     
     /* Media queries for responsive design */
     @media (max-width: 600px) {
@@ -524,11 +513,11 @@
       from the unpkg CDN. 
     */
     import * as THREE from 'https://cdn.skypack.dev/three@0.134.0';
-    import { EffectComposer } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/EffectComposer.js';
-    import { RenderPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/RenderPass.js';
-    import { UnrealBloomPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/UnrealBloomPass.js';
-    import { ShaderPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/ShaderPass.js';
-    import { GlitchPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/GlitchPass.js';
+import { EffectComposer } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/EffectComposer.js';
+import { RenderPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/RenderPass.js';
+import { UnrealBloomPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/UnrealBloomPass.js';
+import { ShaderPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/ShaderPass.js';
+import { GlitchPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/postprocessing/GlitchPass.js';
 
     /* ------------------ DEVICE DETECTION ------------------ */
     const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
@@ -789,14 +778,6 @@
       grid: null
     };
 
-    /* ------------------ GENERATE RANDOM NEON COLOR ------------------ */
-    function getRandomNeonColor() {
-      // Generate a random hue (0-360)
-      const hue = Math.floor(Math.random() * 360);
-      // Fixed high saturation and lightness for neon effect
-      return `hsl(${hue}, 100%, 60%)`;
-    }
-
     /* ------------------ SPLASH SCREEN ------------------ */
     function showSplashScreen() {
       document.getElementById('splashScreen').style.display = 'flex';
@@ -804,214 +785,204 @@
     }
     
     function startGame() {
-  document.getElementById('splashScreen').style.display = 'none';
-  gameStarted = true;
-  clock.start(); // Restart the clock
-  
-  // Update camera position based on device orientation
-  updateCameraForOrientation();
-}
-
-/* ------------------ ORIENTATION HANDLING ------------------ */
-function updateCameraForOrientation() {
-  if (!camera || !playerBike) return;
-  
-  const isPortrait = window.innerHeight > window.innerWidth;
-  
-  if (isPortrait) {
-    // Zoom out more in portrait mode
-    camera.position.set(playerBike.position.x, 40, playerBike.position.z + 80);
-  } else {
-    // Normal camera in landscape
-    camera.position.set(playerBike.position.x, 20, playerBike.position.z + 50);
-  }
-  
-  camera.lookAt(playerBike.position);
-}
-
-window.addEventListener('orientationchange', () => {
-  setTimeout(updateCameraForOrientation, 100);
-});
-
-window.addEventListener('resize', () => {
-  setTimeout(() => {
-    if (camera && renderer) {
-      camera.aspect = window.innerWidth / window.innerHeight;
-      camera.updateProjectionMatrix();
-      renderer.setSize(window.innerWidth, window.innerHeight);
-      composer.setSize(window.innerWidth, window.innerHeight);
+      document.getElementById('splashScreen').style.display = 'none';
+      gameStarted = true;
+      clock.start(); // Restart the clock
+      
+      // Update camera position based on device orientation
       updateCameraForOrientation();
     }
-  }, 100);
+    
+    /* ------------------ ORIENTATION HANDLING ------------------ */
+    function updateCameraForOrientation() {
+      if (!camera || !playerBike) return;
+      
+      const isPortrait = window.innerHeight > window.innerWidth;
+      
+      if (isPortrait) {
+        // Zoom out more in portrait mode
+        camera.position.set(playerBike.position.x, 40, playerBike.position.z + 80);
+      } else {
+        // Normal camera in landscape
+        camera.position.set(playerBike.position.x, 20, playerBike.position.z + 50);
+      }
+      
+      camera.lookAt(playerBike.position);
+    }
+    
+    window.addEventListener('orientationchange', () => {
+      setTimeout(updateCameraForOrientation, 100);
+    });
+    
+    window.addEventListener('resize', () => {setTimeout(() => {
+        if (camera && renderer) {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          composer.setSize(window.innerWidth, window.innerHeight);
+          updateCameraForOrientation();
+        }
+      }, 100);
+    });
+
+    /* ------------------ TOUCH CONTROLS ------------------ */
+    function setupTouchControls() {
+      const leftZone = document.getElementById('leftTouchZone');
+      const rightZone = document.getElementById('rightTouchZone');
+      
+      // Left turn
+      leftZone.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        if (!isPaused && !isGameOver && gameStarted) {
+          playerDirection.set(playerDirection.z, 0, -playerDirection.x);
+        }
+      });
+      
+      // Right turn
+      rightZone.addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        if (!isPaused && !isGameOver && gameStarted) {
+          playerDirection.set(-playerDirection.z, 0, playerDirection.x);
+        }
+      });
+      
+      // Pause button
+      document.getElementById('pauseButton').addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        togglePause();
+      });
+      
+      // Resume button in pause overlay
+      document.getElementById('resumeButton').addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        if (isPaused) togglePause();
+      });
+      
+      // Effects toggle
+      document.getElementById('toggleEffectsButton').addEventListener('touchstart', function(e) {
+        e.preventDefault();
+        const panel = document.getElementById('effectsPanel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      });
+    }
+
+    /* ------------------ UI CONTROLS ------------------ */
+    function setupUIControls() {
+      // Pause button
+      document.getElementById('pauseButton').addEventListener('click', togglePause);
+      document.getElementById('resumeButton').addEventListener('click', togglePause);
+      
+      // Toggle effects panel
+      document.getElementById('toggleEffectsButton').addEventListener('click', () => {
+        const panel = document.getElementById('effectsPanel');
+        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+      });
+      
+      // Setup all range sliders and number inputs
+      setupControl('masterIntensity', 'masterNumber', 'master');
+      setupControl('bloomIntensity', 'bloomNumber', 'bloom');
+      setupControl('pixelIntensity', 'pixelNumber', 'pixel');
+      setupControl('glitchIntensity', 'glitchNumber', 'glitch');
+      setupControl('glitchSeed', 'glitchSeedNumber', 'glitchSeed');
+      setupControl('scanlineIntensity', 'scanlineNumber', 'scanline');
+      setupControl('effectSpeed', 'effectSpeedNumber', 'speed');
+      setupControl('hueShift', 'hueShiftNumber', 'hueShift');
+      setupControl('saturation', 'saturationNumber', 'saturation');
+      setupControl('colorPulse', 'colorPulseNumber', 'colorPulse');
+      
+      // Setup color pickers
+      setupColorPicker('playerColor', 'playerColorPreview');
+      setupColorPicker('gridColor', 'gridColorPreview');
+      
+      // Checkbox for wild glitch mode
+      document.getElementById('wildGlitch').addEventListener('change', (e) => {
+        effectsConfig.wildGlitch = e.target.checked;
+        updateEffects();
+        updateConfigHash();
+      });
+      
+      // Presets dropdown
+      document.getElementById('loadPreset').addEventListener('click', () => {
+        const presetName = document.getElementById('presetDropdown').value;
+        if (presetName) {
+          loadPreset(presetName);
+        }
+      });
+      
+      // Save preset
+      document.getElementById('savePreset').addEventListener('click', () => {
+        const name = document.getElementById('presetName').value || 'custom';
+        const presets = JSON.parse(localStorage.getItem('tronEffectsPresets') || '{}');
+        presets[name] = { ...effectsConfig };
+        localStorage.setItem('tronEffectsPresets', JSON.stringify(presets));
+        
+        // Add to dropdown if not there
+        const dropdown = document.getElementById('presetDropdown');
+        let exists = false;
+        for (let i = 0; i < dropdown.options.length; i++) {
+          if (dropdown.options[i].value === name) {
+            exists = true;
+            break;
+          }
+        }
+        if (!exists) {
+          const option = document.createElement('option');
+          option.value = name;
+          option.text = name;
+          dropdown.add(option);
+        }
+        
+        alert(`Preset "${name}" saved!`);
+      });
+      
+      // Randomize button
+      document.getElementById('randomizeButton').addEventListener('click', randomizeEffects);
+      
+// Replace the entire hash functions section with this improved version
+// that works on mobile devices
+
+// Hash functions
+document.getElementById('copyHash').addEventListener('click', () => {
+  const hashElement = document.getElementById('configHash');
+  const hashText = hashElement.value;
+  
+  // Mobile-friendly approach
+  if (navigator.clipboard && navigator.clipboard.writeText) {
+    // Try the modern async clipboard API
+    navigator.clipboard.writeText(hashText)
+      .then(() => {
+        showToast('Hash copied!');
+      })
+      .catch(() => {
+        // If async clipboard fails, try the fallback
+        const success = copyTextFallback(hashText);
+        if (success) {
+          showToast('Hash copied!');
+        } else {
+          // If all else fails, show the manual copy UI
+          showManualCopyUI(hashText);
+        }
+      });
+  } else {
+    // Try the fallback for browsers without clipboard API
+    const success = copyTextFallback(hashText);
+    if (success) {
+      showToast('Hash copied!');
+    } else {
+      showManualCopyUI(hashText);
+    }
+  }
 });
 
-/* ------------------ TOUCH CONTROLS ------------------ */
-function setupTouchControls() {
-  const leftZone = document.getElementById('leftTouchZone');
-  const rightZone = document.getElementById('rightTouchZone');
-  
-  // Left turn
-  leftZone.addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    if (!isPaused && !isGameOver && gameStarted) {
-      handleBikeTurn(playerBike, 'left');
-    }
-  });
-  
-  // Right turn
-  rightZone.addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    if (!isPaused && !isGameOver && gameStarted) {
-      handleBikeTurn(playerBike, 'right');
-    }
-  });
-  
-  // Pause button
-  document.getElementById('pauseButton').addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    togglePause();
-  });
-  
-  // Resume button in pause overlay
-  document.getElementById('resumeButton').addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    if (isPaused) togglePause();
-  });
-  
-  // Effects toggle
-  document.getElementById('toggleEffectsButton').addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    const panel = document.getElementById('effectsPanel');
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-  });
-}
-
-/* ------------------ UI CONTROLS ------------------ */
-function setupUIControls() {
-  // Pause button
-  document.getElementById('pauseButton').addEventListener('click', togglePause);
-  document.getElementById('resumeButton').addEventListener('click', togglePause);
-  
-  // Toggle effects panel
-  document.getElementById('toggleEffectsButton').addEventListener('click', () => {
-    const panel = document.getElementById('effectsPanel');
-    panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-  });
-  
-  // Setup all range sliders and number inputs
-  setupControl('masterIntensity', 'masterNumber', 'master');
-  setupControl('bloomIntensity', 'bloomNumber', 'bloom');
-  setupControl('pixelIntensity', 'pixelNumber', 'pixel');
-  setupControl('glitchIntensity', 'glitchNumber', 'glitch');
-  setupControl('glitchSeed', 'glitchSeedNumber', 'glitchSeed');
-  setupControl('scanlineIntensity', 'scanlineNumber', 'scanline');
-  setupControl('effectSpeed', 'effectSpeedNumber', 'speed');
-  setupControl('hueShift', 'hueShiftNumber', 'hueShift');
-  setupControl('saturation', 'saturationNumber', 'saturation');
-  setupControl('colorPulse', 'colorPulseNumber', 'colorPulse');
-  
-  // Setup color pickers
-  setupColorPicker('playerColor', 'playerColorPreview');
-  setupColorPicker('gridColor', 'gridColorPreview');
-  
-  // Checkbox for wild glitch mode
-  document.getElementById('wildGlitch').addEventListener('change', (e) => {
-    effectsConfig.wildGlitch = e.target.checked;
-    updateEffects();
-    updateConfigHash();
-  });
-  
-  // Presets dropdown
-  document.getElementById('loadPreset').addEventListener('click', () => {
-    const presetName = document.getElementById('presetDropdown').value;
-    if (presetName) {
-      loadPreset(presetName);
-    }
-  });
-  
-  // Save preset
-  document.getElementById('savePreset').addEventListener('click', () => {
-    const name = document.getElementById('presetName').value || 'custom';
-    const presets = JSON.parse(localStorage.getItem('tronEffectsPresets') || '{}');
-    presets[name] = { ...effectsConfig };
-    localStorage.setItem('tronEffectsPresets', JSON.stringify(presets));
-    
-    // Add to dropdown if not there
-    const dropdown = document.getElementById('presetDropdown');
-    let exists = false;
-    for (let i = 0; i < dropdown.options.length; i++) {
-      if (dropdown.options[i].value === name) {
-        exists = true;
-        break;
-      }
-    }
-    if (!exists) {
-      const option = document.createElement('option');
-      option.value = name;
-      option.text = name;
-      dropdown.add(option);
-    }
-    
-    alert(`Preset "${name}" saved!`);
-  });
-  
-  // Randomize button
-  document.getElementById('randomizeButton').addEventListener('click', randomizeEffects);
-  
-  // Hash functions
-  document.getElementById('copyHash').addEventListener('click', () => {
-    const hashElement = document.getElementById('configHash');
-    const hashText = hashElement.value;
-    
-    // Mobile-friendly approach
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      // Try the modern async clipboard API
-      navigator.clipboard.writeText(hashText)
-        .then(() => {
-          showToast('Hash copied!');
-        })
-        .catch(() => {
-          // If async clipboard fails, try the fallback
-          const success = copyTextFallback(hashText);
-          if (success) {
-            showToast('Hash copied!');
-          } else {
-            // If all else fails, show the manual copy UI
-            showManualCopyUI(hashText);
-          }
-        });
-    } else {
-      // Try the fallback for browsers without clipboard API
-      const success = copyTextFallback(hashText);
-      if (success) {
-        showToast('Hash copied!');
-      } else {
-        showManualCopyUI(hashText);
-      }
-    }
-  });
-  
-  document.getElementById('applyHash').addEventListener('click', () => {
-    const hash = document.getElementById('hashInput').value;
-    try {
-      applyConfigFromHash(hash);
-      showToast('Settings applied!');
-    } catch (e) {
-      showToast('Invalid hash format!', true);
-    }
-  });
-  
-  // Keyboard shortcut to toggle effects panel
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'e' || e.key === 'E') {
-      const panel = document.getElementById('effectsPanel');
-      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-    }
-  });
-  
-  // Generate initial hash
-  updateConfigHash();
-}
+document.getElementById('applyHash').addEventListener('click', () => {
+  const hash = document.getElementById('hashInput').value;
+  try {
+    applyConfigFromHash(hash);
+    showToast('Settings applied!');
+  } catch (e) {
+    showToast('Invalid hash format!', true);
+  }
+});
 
 // Helper functions for mobile-friendly clipboard operations
 function copyTextFallback(text) {
@@ -1132,219 +1103,249 @@ function showToast(message, isError = false) {
   }, 3000);
 }
 
-function setupControl(sliderId, numberId, configKey) {
-  const slider = document.getElementById(sliderId);
-  const numberInput = document.getElementById(numberId);
-  
-  // Sync initial values
-  slider.value = effectsConfig[configKey];
-  numberInput.value = effectsConfig[configKey];
-  
-  // Update config when slider changes
-  slider.addEventListener('input', () => {
-    if (updatingUI) return;
-    const value = parseFloat(slider.value);
-    effectsConfig[configKey] = value;
-    numberInput.value = value;
-    updateEffects();
-    updateConfigHash();
-  });
-  
-  // Update config when number input changes
-  numberInput.addEventListener('change', () => {
-    if (updatingUI) return;
-    const value = parseFloat(numberInput.value);
-    // Clamp to min/max
-    const min = parseFloat(numberInput.min);
-    const max = parseFloat(numberInput.max);
-    const clampedValue = Math.min(Math.max(value, min), max);
-    
-    effectsConfig[configKey] = clampedValue;
-    slider.value = clampedValue;
-    numberInput.value = clampedValue;
-    updateEffects();
-    updateConfigHash();
-  });
-}
-
-function setupColorPicker(colorId, previewId) {
-  const colorInput = document.getElementById(colorId);
-  const preview = document.getElementById(previewId);
-  
-  // Set initial color
-  colorInput.value = effectsConfig[colorId];
-  preview.style.backgroundColor = effectsConfig[colorId];
-  
-  // Update when color changes
-  colorInput.addEventListener('change', () => {
-    if (updatingUI) return;
-    const newColor = colorInput.value;
-    effectsConfig[colorId] = newColor;
-    preview.style.backgroundColor = newColor;
-    updateMaterialColors();
-    updateConfigHash();
-  });
-}
-
-function updateMaterialColors() {
-  // Update colors of player and grid based on color inputs
-  if (materialsToUpdate.player) {
-    const playerColor = new THREE.Color(effectsConfig.playerColor);
-    materialsToUpdate.player.color.set(playerColor);
-    materialsToUpdate.player.emissive.set(playerColor);
+// Add these CSS rules for the toast
+const style = document.createElement('style');
+style.textContent = `
+  #gameToast {
+    animation: fadeInOut 3s ease-in-out;
   }
   
-  if (materialsToUpdate.grid) {
-    const gridColor = new THREE.Color(effectsConfig.gridColor);
-    materialsToUpdate.grid.material[0].color.set(gridColor);
+  @keyframes fadeInOut {
+    0% { opacity: 0; transform: translate(-50%, 20px); }
+    10% { opacity: 1; transform: translate(-50%, 0); }
+    90% { opacity: 1; transform: translate(-50%, 0); }
+    100% { opacity: 0; transform: translate(-50%, -20px); }
   }
-}
-
-function updateSliders() {
-  // This function updates all sliders to match the current config
-  updatingUI = true;
-  
-  // Update range sliders and number inputs
-  document.getElementById('masterIntensity').value = effectsConfig.master;
-  document.getElementById('masterNumber').value = effectsConfig.master;
-  
-  document.getElementById('bloomIntensity').value = effectsConfig.bloom;
-  document.getElementById('bloomNumber').value = effectsConfig.bloom;
-  
-  document.getElementById('pixelIntensity').value = effectsConfig.pixel;
-  document.getElementById('pixelNumber').value = effectsConfig.pixel;
-  
-  document.getElementById('glitchIntensity').value = effectsConfig.glitch;
-  document.getElementById('glitchNumber').value = effectsConfig.glitch;
-  
-  document.getElementById('glitchSeed').value = effectsConfig.glitchSeed;
-  document.getElementById('glitchSeedNumber').value = effectsConfig.glitchSeed;
-  
-  document.getElementById('scanlineIntensity').value = effectsConfig.scanline;
-  document.getElementById('scanlineNumber').value = effectsConfig.scanline;
-  
-  document.getElementById('effectSpeed').value = effectsConfig.speed;
-  document.getElementById('effectSpeedNumber').value = effectsConfig.speed;
-  
-  document.getElementById('hueShift').value = effectsConfig.hueShift;
-  document.getElementById('hueShiftNumber').value = effectsConfig.hueShift;
-  
-  document.getElementById('saturation').value = effectsConfig.saturation;
-  document.getElementById('saturationNumber').value = effectsConfig.saturation;
-  
-  document.getElementById('colorPulse').value = effectsConfig.colorPulse;
-  document.getElementById('colorPulseNumber').value = effectsConfig.colorPulse;
-  
-  // Color inputs
-  document.getElementById('playerColor').value = effectsConfig.playerColor;
-  document.getElementById('playerColorPreview').style.backgroundColor = effectsConfig.playerColor;
-  
-  document.getElementById('gridColor').value = effectsConfig.gridColor;
-  document.getElementById('gridColorPreview').style.backgroundColor = effectsConfig.gridColor;
-  
-  // Checkbox
-  document.getElementById('wildGlitch').checked = effectsConfig.wildGlitch;
-  
-  updatingUI = false;
-}
-
-function updateEffects() {
-  // Update all post-processing effects based on current config
-  
-  // Update bloom pass
-  if (bloomPass) {
-    // Scale more gradually
-    const bloomStrength = Math.pow(effectsConfig.bloom, 1.5) * 0.4 * (1 + effectsConfig.master * 0.2);
-    const bloomRadius = 0.3 + (effectsConfig.bloom * effectsConfig.master * 0.1);
-    const bloomThreshold = Math.max(0.1, 0.9 - (effectsConfig.bloom * effectsConfig.master * 0.03));
-    
-    bloomPass.strength = bloomStrength;
-    bloomPass.radius = bloomRadius;
-    bloomPass.threshold = bloomThreshold;
-  }
-  
-  // Update pixel pass
-  if (pixelPass && pixelPass.uniforms) {
-    // Exponential scaling to make differences more noticeable at higher values
-    const pixelSize = Math.pow(effectsConfig.pixel, 1.5);
-    pixelPass.uniforms.pixelSize.value = pixelSize;
-  }
-  
-  // Update color pass
-  if (colorPass && colorPass.uniforms) {
-    colorPass.uniforms.hueShift.value = effectsConfig.hueShift;
-    colorPass.uniforms.saturation.value = effectsConfig.saturation;
-    colorPass.uniforms.colorPulse.value = effectsConfig.colorPulse * effectsConfig.master;
-    colorPass.uniforms.speed.value = effectsConfig.speed;
-  }
-  
-  // Update scanline pass
-  if (scanlinePass && scanlinePass.uniforms) {
-    scanlinePass.uniforms.intensity.value = effectsConfig.scanline * effectsConfig.master;
-    scanlinePass.uniforms.speed.value = effectsConfig.speed;
-  }
-  
-  // Update glitch pass - use seed for consistent effect
-  if (glitchPass) {
-    // Use the seed to determine glitch patterns
-    glitchPass.enabled = effectsConfig.glitch > 0;
-    glitchPass.goWild = effectsConfig.wildGlitch;
-    
-    // Set internal glitch parameters based on seed and intensity
-    if (glitchPass.uniforms) {
-      // These are internal parameters of the glitch shader that normally use random values
-      // By setting them consistently based on seed, we get stable glitch patterns
-      Math.seedrandom(effectsConfig.glitchSeed.toString());
+`;
+document.head.appendChild(style);
       
-      const curF = 0;
-      const randX = Math.random();
+      // Keyboard shortcut to toggle effects panel
+      document.addEventListener('keydown', (e) => {
+        if (e.key === 'e' || e.key === 'E') {
+          const panel = document.getElementById('effectsPanel');
+          panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        }
+      });
       
-      if (glitchPass.uniforms.amount) {
-        glitchPass.uniforms.amount.value = Math.min(1.0, effectsConfig.glitch * 0.1);
-      }
-      
-      if (glitchPass.uniforms.seed_x) {
-        glitchPass.uniforms.seed_x.value = randX;
-      }
-      
-      if (glitchPass.uniforms.seed_y) {
-        glitchPass.uniforms.seed_y.value = Math.random();
-      }
-      
-      if (glitchPass.uniforms.distortion_x) {
-        glitchPass.uniforms.distortion_x.value = Math.random() * 2;
-      }
-      
-      if (glitchPass.uniforms.distortion_y) {
-        glitchPass.uniforms.distortion_y.value = Math.random() * 2;
-      }
-      
-      // Reset random seed
-      Math.seedrandom();
+      // Generate initial hash
+      updateConfigHash();
     }
-  }
-}
-
-/* ------------------ HASH FUNCTIONS ------------------ */
-// Seeded random for consistent glitch effects
-// Simple seedable random function
-Math.seedrandom = function(seed) {
-  let mSeed = seed || Math.floor(Math.random() * 233280);
-  
-  // Replace Math.random with seeded version
-  const oldRandom = Math.random;
-  Math.random = function() {
-    const a = 16807;
-    const m = 2147483647;
-    mSeed = (a * mSeed) % m;
-    return mSeed / m;
-  };
-  
-  // Method to reset to normal Math.random
-  Math.seedrandom.reset = function() {
-    Math.random = oldRandom;
-  };
-};
+    
+    function setupControl(sliderId, numberId, configKey) {
+      const slider = document.getElementById(sliderId);
+      const numberInput = document.getElementById(numberId);
+      
+      // Sync initial values
+      slider.value = effectsConfig[configKey];
+      numberInput.value = effectsConfig[configKey];
+      
+      // Update config when slider changes
+      slider.addEventListener('input', () => {
+        if (updatingUI) return;
+        const value = parseFloat(slider.value);
+        effectsConfig[configKey] = value;
+        numberInput.value = value;
+        updateEffects();
+        updateConfigHash();
+      });
+      
+      // Update config when number input changes
+      numberInput.addEventListener('change', () => {
+        if (updatingUI) return;
+        const value = parseFloat(numberInput.value);
+        // Clamp to min/max
+        const min = parseFloat(numberInput.min);
+        const max = parseFloat(numberInput.max);
+        const clampedValue = Math.min(Math.max(value, min), max);
+        
+        effectsConfig[configKey] = clampedValue;
+        slider.value = clampedValue;
+        numberInput.value = clampedValue;
+        updateEffects();
+        updateConfigHash();
+      });
+    }
+    
+    function setupColorPicker(colorId, previewId) {
+      const colorInput = document.getElementById(colorId);
+      const preview = document.getElementById(previewId);
+      
+      // Set initial color
+      colorInput.value = effectsConfig[colorId];
+      preview.style.backgroundColor = effectsConfig[colorId];
+      
+      // Update when color changes
+      colorInput.addEventListener('change', () => {
+        if (updatingUI) return;
+        const newColor = colorInput.value;
+        effectsConfig[colorId] = newColor;
+        preview.style.backgroundColor = newColor;
+        updateMaterialColors();
+        updateConfigHash();
+      });
+    }
+    
+    function updateMaterialColors() {
+      // Update colors of player and grid based on color inputs
+      if (materialsToUpdate.player) {
+        const playerColor = new THREE.Color(effectsConfig.playerColor);
+        materialsToUpdate.player.color.set(playerColor);
+        materialsToUpdate.player.emissive.set(playerColor);
+      }
+      
+      if (materialsToUpdate.grid) {
+        const gridColor = new THREE.Color(effectsConfig.gridColor);
+        if (Array.isArray(materialsToUpdate.grid.material)) {
+          materialsToUpdate.grid.material[0].color.set(gridColor);
+        }
+      }
+    }
+    
+    function updateSliders() {
+      // This function updates all sliders to match the current config
+      updatingUI = true;
+      
+      // Update range sliders and number inputs
+      document.getElementById('masterIntensity').value = effectsConfig.master;
+      document.getElementById('masterNumber').value = effectsConfig.master;
+      
+      document.getElementById('bloomIntensity').value = effectsConfig.bloom;
+      document.getElementById('bloomNumber').value = effectsConfig.bloom;
+      
+      document.getElementById('pixelIntensity').value = effectsConfig.pixel;
+      document.getElementById('pixelNumber').value = effectsConfig.pixel;
+      
+      document.getElementById('glitchIntensity').value = effectsConfig.glitch;
+      document.getElementById('glitchNumber').value = effectsConfig.glitch;
+      
+      document.getElementById('glitchSeed').value = effectsConfig.glitchSeed;
+      document.getElementById('glitchSeedNumber').value = effectsConfig.glitchSeed;
+      
+      document.getElementById('scanlineIntensity').value = effectsConfig.scanline;
+      document.getElementById('scanlineNumber').value = effectsConfig.scanline;
+      
+      document.getElementById('effectSpeed').value = effectsConfig.speed;
+      document.getElementById('effectSpeedNumber').value = effectsConfig.speed;
+      
+      document.getElementById('hueShift').value = effectsConfig.hueShift;
+      document.getElementById('hueShiftNumber').value = effectsConfig.hueShift;
+      
+      document.getElementById('saturation').value = effectsConfig.saturation;
+      document.getElementById('saturationNumber').value = effectsConfig.saturation;
+      
+      document.getElementById('colorPulse').value = effectsConfig.colorPulse;
+      document.getElementById('colorPulseNumber').value = effectsConfig.colorPulse;
+      
+      // Color inputs
+      document.getElementById('playerColor').value = effectsConfig.playerColor;
+      document.getElementById('playerColorPreview').style.backgroundColor = effectsConfig.playerColor;
+      
+      document.getElementById('gridColor').value = effectsConfig.gridColor;
+      document.getElementById('gridColorPreview').style.backgroundColor = effectsConfig.gridColor;
+      
+      // Checkbox
+      document.getElementById('wildGlitch').checked = effectsConfig.wildGlitch;
+      
+      updatingUI = false;
+    }
+    
+    function updateEffects() {
+      // Update all post-processing effects based on current config
+      
+      // Update bloom pass
+      if (bloomPass) {
+        // Scale more gradually
+        const bloomStrength = Math.pow(effectsConfig.bloom, 1.5) * 0.4 * (1 + effectsConfig.master * 0.2);
+        const bloomRadius = 0.3 + (effectsConfig.bloom * effectsConfig.master * 0.1);
+        const bloomThreshold = Math.max(0.1, 0.9 - (effectsConfig.bloom * effectsConfig.master * 0.03));
+        
+        bloomPass.strength = bloomStrength;
+        bloomPass.radius = bloomRadius;
+        bloomPass.threshold = bloomThreshold;
+      }
+      
+      // Update pixel pass
+      if (pixelPass && pixelPass.uniforms) {
+        // Exponential scaling to make differences more noticeable at higher values
+        const pixelSize = Math.pow(effectsConfig.pixel, 1.5);
+        pixelPass.uniforms.pixelSize.value = pixelSize;
+      }
+      
+      // Update color pass
+      if (colorPass && colorPass.uniforms) {
+        colorPass.uniforms.hueShift.value = effectsConfig.hueShift;
+        colorPass.uniforms.saturation.value = effectsConfig.saturation;
+        colorPass.uniforms.colorPulse.value = effectsConfig.colorPulse * effectsConfig.master;
+        colorPass.uniforms.speed.value = effectsConfig.speed;
+      }
+      
+      // Update scanline pass
+      if (scanlinePass && scanlinePass.uniforms) {
+        scanlinePass.uniforms.intensity.value = effectsConfig.scanline * effectsConfig.master;
+        scanlinePass.uniforms.speed.value = effectsConfig.speed;
+      }
+      
+      // Update glitch pass - use seed for consistent effect
+      if (glitchPass) {
+        // Use the seed to determine glitch patterns
+        glitchPass.enabled = effectsConfig.glitch > 0;
+        glitchPass.goWild = effectsConfig.wildGlitch;
+        
+        // Set internal glitch parameters based on seed and intensity
+        if (glitchPass.uniforms) {
+          // These are internal parameters of the glitch shader that normally use random values
+          // By setting them consistently based on seed, we get stable glitch patterns
+          Math.seedrandom(effectsConfig.glitchSeed.toString());
+          
+          const curF = 0;
+          const randX = Math.random();
+          
+          if (glitchPass.uniforms.amount) {
+            glitchPass.uniforms.amount.value = Math.min(1.0, effectsConfig.glitch * 0.1);
+          }
+          
+          if (glitchPass.uniforms.seed_x) {
+            glitchPass.uniforms.seed_x.value = randX;
+          }
+          
+          if (glitchPass.uniforms.seed_y) {
+            glitchPass.uniforms.seed_y.value = Math.random();
+          }
+          
+          if (glitchPass.uniforms.distortion_x) {
+            glitchPass.uniforms.distortion_x.value = Math.random() * 2;
+          }
+          
+          if (glitchPass.uniforms.distortion_y) {
+            glitchPass.uniforms.distortion_y.value = Math.random() * 2;
+          }
+          
+          // Reset random seed
+          Math.seedrandom();
+        }
+      }
+    }
+    
+    /* ------------------ HASH FUNCTIONS ------------------ */
+    // Seeded random for consistent glitch effects
+    // Simple seedable random function
+    Math.seedrandom = function(seed) {
+      let mSeed = seed || Math.floor(Math.random() * 233280);
+      
+      // Replace Math.random with seeded version
+      const oldRandom = Math.random;
+      Math.random = function() {
+        const a = 16807;
+        const m = 2147483647;
+        mSeed = (a * mSeed) % m;
+        return mSeed / m;
+      };
+      
+      // Method to reset to normal Math.random
+      Math.seedrandom.reset = function() {
+        Math.random = oldRandom;
+      };
+    };
 
 // Converts config to a compact 20-character hash
 function updateConfigHash() {
@@ -1433,7 +1434,21 @@ function decodeHashToConfig(hash) {
   
   const config = {};
   
-  // Extract values using the same schema as encoding
+  // 1. Extract values using the same schema as encoding
+  // (1-indexed for clarity in reading position)
+  //  Pos 1: master
+  //  Pos 2: bloom
+  //  Pos 3: pixel
+  //  Pos 4: glitch
+  //  Pos 5-6: glitchSeed
+  //  Pos 7: scanline
+  //  Pos 8: speed
+  //  Pos 9: wildGlitch
+  //  Pos 10-11: hueShift
+  //  Pos 12: saturation
+  //  Pos 13: colorPulse
+  //  Pos 14-16: playerColor
+  //  Pos 17-20: gridColor
   
   // First 4 chars
   config.master = parseInt(hash[0], 36) / 9;
@@ -1477,1344 +1492,1374 @@ function decodeHashToConfig(hash) {
   
   return config;
 }
+    
+    function randomizeEffects() {
+      // Generate random values for all effects
+      effectsConfig.master = Math.random() * 2 + 0.5; // 0.5 to 2.5
+      effectsConfig.bloom = Math.random() * 3 + 0.5; // 0.5 to 3.5
+      effectsConfig.pixel = Math.floor(Math.random() * 10) + 1; // 1 to 10
+      effectsConfig.glitch = Math.random() * 3; // 0 to 3
+      effectsConfig.glitchSeed = Math.floor(Math.random() * 1000) + 1; // 1 to 1000
+      effectsConfig.scanline = Math.random() * 5; // 0 to 5
+      effectsConfig.speed = 0.5 + Math.random() * 1.5; // 0.5 to 2
+      effectsConfig.wildGlitch = Math.random() > 0.8; // 20% chance
+      effectsConfig.hueShift = Math.floor(Math.random() * 360); // 0 to 360
+      effectsConfig.saturation = 0.7 + Math.random() * 0.6; // 0.7 to 1.3
+      effectsConfig.colorPulse = Math.random() * 3; // 0 to 3
+      
+      // Random colors with slight neon bias
+      const randomNeonColor = () => {
+        const hue = Math.floor(Math.random() * 360);
+        return `hsl(${hue}, 100%, 50%)`;
+      };
+      
+      effectsConfig.playerColor = randomNeonColor();
+      effectsConfig.gridColor = randomNeonColor();
+      
+      // Update everything
+      updateSliders();
+      updateEffects();
+      updateMaterialColors();
+      updateConfigHash();
+    }
 
-function randomizeEffects() {
-  // Generate random values for all effects
-  effectsConfig.master = Math.random() * 2 + 0.5; // 0.5 to 2.5
-  effectsConfig.bloom = Math.random() * 3 + 0.5; // 0.5 to 3.5
-  effectsConfig.pixel = Math.floor(Math.random() * 10) + 1; // 1 to 10
-  effectsConfig.glitch = Math.random() * 3; // 0 to 3
-  effectsConfig.glitchSeed = Math.floor(Math.random() * 1000) + 1; // 1 to 1000
-  effectsConfig.scanline = Math.random() * 5; // 0 to 5
-  effectsConfig.speed = 0.5 + Math.random() * 1.5; // 0.5 to 2
-  effectsConfig.wildGlitch = Math.random() > 0.8; // 20% chance
-  effectsConfig.hueShift = Math.floor(Math.random() * 360); // 0 to 360
-  effectsConfig.saturation = 0.7 + Math.random() * 0.6; // 0.7 to 1.3
-  effectsConfig.colorPulse = Math.random() * 3; // 0 to 3
-  
-  // Random colors with slight neon bias
-  effectsConfig.playerColor = getRandomNeonColor();
-  effectsConfig.gridColor = getRandomNeonColor();
-  
-  // Update everything
-  updateSliders();
-  updateEffects();
-  updateMaterialColors();
-  updateConfigHash();
-}
+    /* ------------------ INITIAL SETUP ------------------ */
+    function init() {
+      // Create scene
+      scene = new THREE.Scene();
+      scene.background = new THREE.Color(0x000011);
 
-/* ------------------ SHARED BIKE FUNCTIONS ------------------ */
-// This is the key improvement - a single function to create bikes for both player and AI
-function createBike(options) {
-  const { type, position, direction, color, generation, aiCharacteristics } = options;
-  
-  const bike = new THREE.Group();
-  const isPlayer = type === 'player';
-  
-  // Setup the common bike userData
-  bike.userData = {
-    type: type,
-    direction: direction.clone(),
-    trail: [],
-    tailLength: 5,
-    speed: isPlayer ? PLAYER_SPEED : AI_SPEED_BASE * (1 + (generation - 1) * 0.05),
-    color: new THREE.Color(color),
-    originalRotation: new THREE.Euler(0, 0, 0),
-    targetTilt: 0,
-    currentTilt: 0,
-    // Additional properties for AI bikes
-    ...(!isPlayer && {
-      id: Date.now() + aiBikes.length,
-      generation: generation,
-      lastTurnTime: 0,
-      lastPosition: new THREE.Vector3(),
-      crashCount: 0,
-      powerupsCollected: 0,
-      characteristics: aiCharacteristics || {
-        avoidDistance: knowledgeBase.avoidDistance + (Math.random() - 0.5) * 5,
-        powerupWeight: knowledgeBase.powerupWeight + (Math.random() - 0.5) * 10,
-        turnRandomness: knowledgeBase.turnRandomness * (0.8 + Math.random() * 0.4),
-        preferredTurn: Math.random() > 0.5 ? 'left' : 'right',
-        riskTolerance: 0.8 + Math.random() * 0.4 // How willing they are to take risky moves
-      })
-    })
-  };
+      // Create camera
+      camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
 
-  // Create materials
-  const bikeColor = new THREE.Color(color);
+      // Create renderer
+      renderer = new THREE.WebGLRenderer({ antialias: true });
+      renderer.setSize(window.innerWidth, window.innerHeight);
+      document.getElementById('gameContainer').appendChild(renderer.domElement);
+
+      // Setup postprocessing
+      composer = new EffectComposer(renderer);
+      const renderPass = new RenderPass(scene, camera);
+      composer.addPass(renderPass);
+
+      // Bloom pass
+      bloomPass = new UnrealBloomPass(
+        new THREE.Vector2(window.innerWidth, window.innerHeight),
+        0.8 * effectsConfig.bloom, // Strength
+        0.3 + (effectsConfig.bloom * 0.2), // Radius
+        0.85 - (effectsConfig.bloom * 0.05) // Threshold
+      );
+      composer.addPass(bloomPass);
+      effectPasses.bloom = bloomPass;
+
+      // Pixelation pass (comes early in the pipeline)
+      pixelPass = new ShaderPass(PixelShader);
+      pixelPass.uniforms.pixelSize.value = effectsConfig.pixel;
+      composer.addPass(pixelPass);
+      effectPasses.pixel = pixelPass;
+
+      // Color adjustment pass
+      colorPass = new ShaderPass(ColorShader);
+      colorPass.uniforms.hueShift.value = effectsConfig.hueShift;
+      colorPass.uniforms.saturation.value = effectsConfig.saturation;
+      colorPass.uniforms.colorPulse.value = effectsConfig.colorPulse;
+      colorPass.uniforms.speed.value = effectsConfig.speed;
+      composer.addPass(colorPass);
+      effectPasses.color = colorPass;
+
+      // Scanline pass
+      scanlinePass = new ShaderPass(ScanlineShader);
+      scanlinePass.uniforms.intensity.value = effectsConfig.scanline;
+      scanlinePass.uniforms.speed.value = effectsConfig.speed;
+      composer.addPass(scanlinePass);
+      effectPasses.scanline = scanlinePass;
+
+      // Glitch pass (optional based on intensity)
+      glitchPass = new GlitchPass();
+      glitchPass.enabled = effectsConfig.glitch > 0;
+      glitchPass.goWild = effectsConfig.wildGlitch;
+      composer.addPass(glitchPass);
+      effectPasses.glitch = glitchPass;
+      
+      // Update effects with initial settings
+      updateEffects();
+
+      // Basic lighting
+      scene.add(new THREE.AmbientLight(0x444444));
+      const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
+      directionalLight.position.set(0, 100, 0);
+      scene.add(directionalLight);
+
+      // Grid floor with color from settings
+      const gridColor = new THREE.Color(effectsConfig.gridColor);
+      const gridHelper = new THREE.GridHelper(WORLD_SIZE, 50, gridColor, 0x004488);
+      scene.add(gridHelper);
+      materialsToUpdate.grid = gridHelper;
+
+      createWorldBoundaries();
+      createPlayerBike();
+      createAIBike();
+      for (let i = 0; i < 20; i++) createObstacle();
+      for (let i = 0; i < 15; i++) createPowerup();
+
+      // Position camera based on device orientation
+      updateCameraForOrientation();
+
+      // Setup UI controls
+      setupUIControls();
+      
+      // Setup touch controls
+      setupTouchControls();
+      
+      // Load presets
+      initPresets();
+
+      // Event listeners
+      document.addEventListener('keydown', onKeyDown);
+      window.addEventListener('resize', onWindowResize);
+      document.getElementById('restartButton').addEventListener('click', restartGame);
+
+      // Start AI spawn timer
+      startAISpawnTimer();
+
+      // Show splash screen
+      showSplashScreen();
+      
+      // Start animation loop
+      animate();
+    }
+
+    /* ------------------ PAUSE GAME ------------------ */
+    function togglePause() {
+      if (!gameStarted) return;
+      
+      isPaused = !isPaused;
+      
+      const pauseButton = document.getElementById('pauseButton');
+      const pauseOverlay = document.getElementById('pauseOverlay');
+      
+      if (isPaused) {
+        pauseButton.textContent = 'RESUME';
+        pauseOverlay.style.display = 'flex';
+      } else {
+        pauseButton.textContent = 'PAUSE';
+        pauseOverlay.style.display = 'none';
+      }
+    }
+
+    /* ------------------ WORLD BOUNDARIES ------------------ */
+    function createWorldBoundaries() {
+      const wallHeight = 20;
+      const wallMaterial = new THREE.MeshPhongMaterial({
+        color: 0x0088ff,
+        emissive: 0x0044aa,
+        transparent: true,
+        opacity: 0.3 + (effectsConfig.master * 0.1) // More visible at higher intensities
+      });
+
+      const northWall = new THREE.Mesh(new THREE.BoxGeometry(WORLD_SIZE, wallHeight, 2), wallMaterial);
+      northWall.position.set(0, wallHeight/2, -WORLD_SIZE/2);
+      scene.add(northWall);
+      obstacles.push(northWall);
+
+      const southWall = new THREE.Mesh(new THREE.BoxGeometry(WORLD_SIZE, wallHeight, 2), wallMaterial);
+      southWall.position.set(0, wallHeight/2, WORLD_SIZE/2);
+      scene.add(southWall);
+      obstacles.push(southWall);
+
+      const eastWall = new THREE.Mesh(new THREE.BoxGeometry(2, wallHeight, WORLD_SIZE), wallMaterial);
+      eastWall.position.set(WORLD_SIZE/2, wallHeight/2, 0);
+      scene.add(eastWall);
+      obstacles.push(eastWall);
+
+      const westWall = new THREE.Mesh(new THREE.BoxGeometry(2, wallHeight, WORLD_SIZE), wallMaterial);
+      westWall.position.set(-WORLD_SIZE/2, wallHeight/2, 0);
+      scene.add(westWall);
+      obstacles.push(westWall);
+    }
+
+    /* ------------------ PLAYER BIKE ------------------ */
+    function createPlayerBike() {
+  playerBike = new THREE.Group();
+  const playerColor = new THREE.Color(effectsConfig.playerColor);
   
-  // Main bike material - solid neon color
-  const bikeMaterial = new THREE.MeshPhongMaterial({
-    color: bikeColor,
-    emissive: bikeColor,
+  // Main bike body - thin, wall-like design matching the trail
+  const bikeBodyMaterial = new THREE.MeshPhongMaterial({
+    color: playerColor,
+    emissive: playerColor,
     emissiveIntensity: 0.8 + (effectsConfig.master * 0.3),
     shininess: 30
   });
   
-  // Store player material for dynamic updates
-  if (isPlayer) {
-    materialsToUpdate.player = bikeMaterial;
-  }
+  materialsToUpdate.player = bikeBodyMaterial;
   
-  // White accent material
-  const accentMaterial = new THREE.MeshPhongMaterial({
-    color: 0xffffff,
-    emissive: 0xffffff,
-    emissiveIntensity: 1.0 + (effectsConfig.master * 0.4),
-    transparent: false,
-    opacity: 1.0
+  // Main body - thin wall matching trail dimensions
+  const bikeBody = new THREE.Mesh(
+    new THREE.BoxGeometry(4, 6, 0.5),
+    bikeBodyMaterial
+  );
+  playerBike.add(bikeBody);
+  
+  // Subtle front edge with slight tapering
+  const frontEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 6, 0.75),
+    bikeBodyMaterial
+  );
+  frontEdge.position.set(2.5, 0, 0);
+  playerBike.add(frontEdge);
+  
+  // Edge lighting effect along the perimeter
+  const edgeMaterial = new THREE.MeshPhongMaterial({
+    color: playerColor,
+    emissive: playerColor,
+    emissiveIntensity: 1.5 + (effectsConfig.master * 0.5),
+    transparent: true,
+    opacity: 0.9
   });
   
-  // Create the bike shape components
-  
-  // 1. Main body
-  const bodyGeometry = new THREE.BoxGeometry(12, 2.5, 0.8);
-  const mainBody = new THREE.Mesh(bodyGeometry, bikeMaterial);
-  mainBody.position.set(0, 0, 0);
-  bike.add(mainBody);
-  
-  // 2. Tapered front section
-  const frontSection = new THREE.Mesh(
-    new THREE.BoxGeometry(4, 1.5, 0.8),
-    bikeMaterial
+  // Top light edge
+  const topEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(4.5, 0.2, 0.6),
+    edgeMaterial
   );
-  frontSection.position.set(6, 0, 0);
-  bike.add(frontSection);
+  topEdge.position.set(0, 3, 0);
+  playerBike.add(topEdge);
   
-  // 3. Tapered rear section
-  const rearSection = new THREE.Mesh(
-    new THREE.BoxGeometry(3, 2.0, 0.8),
-    bikeMaterial
+  // Bottom light edge
+  const bottomEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(4.5, 0.2, 0.6),
+    edgeMaterial
   );
-  rearSection.position.set(-6, 0, 0);
-  bike.add(rearSection);
+  bottomEdge.position.set(0, -3, 0);
+  playerBike.add(bottomEdge);
   
-  // 4. Add white accent edges that outline key parts of the lightcycle
-  const edges = [
-    // Top line from front to mid
-    { from: [8, 0.5, 0], to: [4, 1.5, 0] },
-    // Windshield top line
-    { from: [4, 1.5, 0], to: [2, 1.8, 0] },
-    // Top line from mid to rear
-    { from: [2, 1.8, 0], to: [-7, 1.0, 0] },
-    // Front vertical line
-    { from: [8, 0.5, 0], to: [8, -0.5, 0] },
-    // Bottom line front section
-    { from: [8, -0.5, 0], to: [0, -1.5, 0] },
-    // Bottom line rear section
-    { from: [0, -1.5, 0], to: [-7, -1.0, 0] },
-    // Rear vertical line
-    { from: [-7, 1.0, 0], to: [-7, -1.0, 0] }
-  ];
-  
-  edges.forEach((edge) => {
-    // Create a line geometry
-    const geometry = new THREE.BoxGeometry(
-      Math.sqrt(Math.pow(edge.to[0] - edge.from[0], 2) + Math.pow(edge.to[1] - edge.from[1], 2)), 
-      0.15, // Thickness of the line
-      0.2    // Slightly thicker
-    );
-    
-    const line = new THREE.Mesh(geometry, accentMaterial);
-    
-    // Position at the midpoint
-    line.position.set(
-      (edge.from[0] + edge.to[0]) / 2,
-      (edge.from[1] + edge.to[1]) / 2,
-      (edge.from[2] + edge.to[2]) / 2
-    );
-    
-    // Rotate to align with the edge
-    const angle = Math.atan2(edge.to[1] - edge.from[1], edge.to[0] - edge.from[0]);
-    line.rotation.z = angle;
-    
-    bike.add(line);
-  });
-  
-  // 5. Engine central circle
-  const engineRing = new THREE.Mesh(
-    new THREE.TorusGeometry(1.0, 0.3, 16, 32),
-    bikeMaterial
+  // Front light edge
+  const frontLightEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 6, 0.6),
+    edgeMaterial
   );
-  engineRing.rotation.y = Math.PI/2;
-  engineRing.position.set(0, 0, 0);
-  bike.add(engineRing);
+  frontLightEdge.position.set(2.9, 0, 0);
+  playerBike.add(frontLightEdge);
   
-  // 6. White accent on engine circle
-  const engineAccent = new THREE.Mesh(
-    new THREE.RingGeometry(0.9, 1.1, 32),
-    accentMaterial
+  // Rear light edge
+  const rearLightEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 6, 0.6),
+    edgeMaterial
   );
-  engineAccent.rotation.y = Math.PI/2;
-  engineAccent.position.set(0, 0, 0.1);
-  bike.add(engineAccent);
+  rearLightEdge.position.set(-2, 0, 0);
+  playerBike.add(rearLightEdge);
   
-  // 7. Add diagonal accent lines
-  const accentLines = [
-    { from: [2, 0, 0], to: [4, 1, 0] },
-    { from: [-2, 0, 0], to: [-4, -1, 0] }
-  ];
+  // Glow effect using point lights
+  const centerLight = new THREE.PointLight(playerColor, 1 + (effectsConfig.master * 0.5), 
+                                         8 + (effectsConfig.master * 3));
+  centerLight.position.set(0, 0, 0);
+  playerBike.add(centerLight);
   
-  accentLines.forEach((edge) => {
-    const geometry = new THREE.BoxGeometry(
-      Math.sqrt(Math.pow(edge.to[0] - edge.from[0], 2) + Math.pow(edge.to[1] - edge.from[1], 2)), 
-      0.15, 
-      0.2
-    );
-    
-    const line = new THREE.Mesh(geometry, accentMaterial);
-    
-    // Position at the midpoint
-    line.position.set(
-      (edge.from[0] + edge.to[0]) / 2,
-      (edge.from[1] + edge.to[1]) / 2,
-      (edge.from[2] + edge.to[2]) / 2
-    );
-    
-    // Rotate to align with the edge
-    const angle = Math.atan2(edge.to[1] - edge.from[1], edge.to[0] - edge.from[0]);
-    line.rotation.z = angle;
-    
-    bike.add(line);
-  });
-  
-  // 8. Add lighting effects for enhanced glow
-  // Main light for overall glow
-  const mainLight = new THREE.PointLight(bikeColor, 1.5 + (effectsConfig.master * 0.5), 
-                                     10 + (effectsConfig.master * 3));
-  mainLight.position.set(0, 0, 0);
-  bike.add(mainLight);
-  
-  // Front light
-  const frontLight = new THREE.PointLight(bikeColor, 1.2 + (effectsConfig.master * 0.4), 
-                                     8 + (effectsConfig.master * 2));
-  frontLight.position.set(6, 0, 0);
-  bike.add(frontLight);
-  
-  // White accent light
-  const accentLight = new THREE.PointLight(0xffffff, 0.8 + (effectsConfig.master * 0.3), 
-                                       6 + (effectsConfig.master * 2));
-  accentLight.position.set(2, 1, 0);
-  bike.add(accentLight);
-  
-  // Red tail light
-  const tailLight = new THREE.PointLight(0xff0000, 0.8 + (effectsConfig.master * 0.3), 
-                                    5 + (effectsConfig.master * 2));
-  tailLight.position.set(-7, 0, 0);
-  bike.add(tailLight);
+  // Front light for visibility
+  const frontLight = new THREE.PointLight(playerColor, 0.7 + (effectsConfig.master * 0.3), 
+                                        5 + (effectsConfig.master * 2));
+  frontLight.position.set(2.5, 0, 0);
+  playerBike.add(frontLight);
 
-  // Position bike
-  bike.position.copy(position);
-  scene.add(bike);
+  playerBike.position.set(-WORLD_SIZE/4, 3, 0); // Position at the height of the trail
+  scene.add(playerBike);
+
+  // Player starts facing +X
+  playerDirection = new THREE.Vector3(1, 0, 0);
   
-  // Set bike facing direction
-  const angle = Math.atan2(direction.z, direction.x);
-  bike.rotation.y = -angle;
-  
-  return bike;
+  // Store original rotation for tilt calculations
+  playerBike.userData = playerBike.userData || {};
+  playerBike.userData.originalRotation = new THREE.Euler().copy(playerBike.rotation);
+  playerBike.userData.targetTilt = 0;
+  playerBike.userData.currentTilt = 0;
 }
 
-// Create player bike
-function createPlayerBike() {
-  // Generate a random neon color for the player at game start
-  if (!effectsConfig.playerColor || effectsConfig.playerColor === "#ff00ff") {
-    effectsConfig.playerColor = getRandomNeonColor();
-  }
-  
-  // Create player bike
-  playerBike = createBike({
-    type: 'player',
-    position: new THREE.Vector3(-WORLD_SIZE/4, 2, 0),
-    direction: new THREE.Vector3(1, 0, 0), // Player starts facing +X
-    color: effectsConfig.playerColor
-  });
-  
-  // Set global playerDirection reference
-  playerDirection = playerBike.userData.direction;
-}
-
-// Create AI bike
+/* ------------------ AI BIKE ENHANCEMENTS ------------------ */
 function createAIBike() {
   const aiIndex = aiBikes.length;
   const hue = (aiIndex * 60) % 360; // Vary colors for different AIs
-  const aiColor = new THREE.Color(`hsl(${hue}, 100%, 60%)`);
+  const aiColor = new THREE.Color(`hsl(${hue}, 100%, 50%)`);
   
-  // Randomize starting position for AI
-  const startOffset = aiIndex * 20;
-  const aiPosition = new THREE.Vector3(
-    WORLD_SIZE/4, 
-    2, 
-    startOffset - (aiBikes.length * 10)
-  );
-  
-  // Create AI bike
-  const aiBike = createBike({
-    type: 'ai',
-    position: aiPosition,
+  const aiBike = new THREE.Group();
+  aiBike.userData = {
+    id: Date.now() + aiIndex,
     direction: new THREE.Vector3(-1, 0, 0), // AI starts facing -X
+    trail: [],
+    tailLength: 5,
+    speed: AI_SPEED_BASE * (1 + (aiGeneration - 1) * 0.05), // Speed increases with generation
     color: aiColor,
-    generation: aiGeneration
+    generation: aiGeneration,
+    lastTurnTime: 0,
+    lastPosition: new THREE.Vector3(),
+    crashCount: 0,
+    powerupsCollected: 0,
+    originalRotation: new THREE.Euler(0, 0, 0),
+    targetTilt: 0,
+    currentTilt: 0,
+    // Individual AI characteristics that evolve
+    characteristics: {
+      avoidDistance: knowledgeBase.avoidDistance + (Math.random() - 0.5) * 5,
+      powerupWeight: knowledgeBase.powerupWeight + (Math.random() - 0.5) * 10,
+      turnRandomness: knowledgeBase.turnRandomness * (0.8 + Math.random() * 0.4),
+      preferredTurn: Math.random() > 0.5 ? 'left' : 'right', // Some AIs prefer turning one way
+      riskTolerance: 0.8 + Math.random() * 0.4 // How willing they are to take risky moves
+    }
+  };
+
+  // Using same thin wall-like bike design as player, different color
+  const bikeBodyMaterial = new THREE.MeshPhongMaterial({
+    color: aiColor,
+    emissive: aiColor,
+    emissiveIntensity: 0.8 + (effectsConfig.master * 0.3),
+    shininess: 30
   });
   
+  // Main body - thin wall matching trail dimensions
+  const bikeBody = new THREE.Mesh(
+    new THREE.BoxGeometry(4, 6, 0.5),
+    bikeBodyMaterial
+  );
+  aiBike.add(bikeBody);
+  
+  // Subtle front edge with slight tapering
+  const frontEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(1, 6, 0.75),
+    bikeBodyMaterial
+  );
+  frontEdge.position.set(2.5, 0, 0);
+  aiBike.add(frontEdge);
+  
+  // Edge lighting effect along the perimeter
+  const edgeMaterial = new THREE.MeshPhongMaterial({
+    color: aiColor,
+    emissive: aiColor,
+    emissiveIntensity: 1.5 + (effectsConfig.master * 0.5),
+    transparent: true,
+    opacity: 0.9
+  });
+  
+  // Top light edge
+  const topEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(4.5, 0.2, 0.6),
+    edgeMaterial
+  );
+  topEdge.position.set(0, 3, 0);
+  aiBike.add(topEdge);
+  
+  // Bottom light edge
+  const bottomEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(4.5, 0.2, 0.6),
+    edgeMaterial
+  );
+  bottomEdge.position.set(0, -3, 0);
+  aiBike.add(bottomEdge);
+  
+  // Front light edge
+  const frontLightEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 6, 0.6),
+    edgeMaterial
+  );
+  frontLightEdge.position.set(2.9, 0, 0);
+  aiBike.add(frontLightEdge);
+  
+  // Rear light edge
+  const rearLightEdge = new THREE.Mesh(
+    new THREE.BoxGeometry(0.2, 6, 0.6),
+    edgeMaterial
+  );
+  rearLightEdge.position.set(-2, 0, 0);
+  aiBike.add(rearLightEdge);
+  
+  // Glow effect using point lights
+  const centerLight = new THREE.PointLight(aiColor, 1 + (effectsConfig.master * 0.5), 
+                                        8 + (effectsConfig.master * 3));
+  centerLight.position.set(0, 0, 0);
+  aiBike.add(centerLight);
+  
+  // Front light for visibility
+  const frontLight = new THREE.PointLight(aiColor, 0.7 + (effectsConfig.master * 0.3), 
+                                        5 + (effectsConfig.master * 2));
+  frontLight.position.set(2.5, 0, 0);
+  aiBike.add(frontLight);
+
+  // Randomize starting position a bit for each AI
+  const startOffset = aiIndex * 20;
+  aiBike.position.set(WORLD_SIZE/4, 3, startOffset - (aiBikes.length * 10)); // Position at the height of the trail
+  scene.add(aiBike);
+
   aiBikes.push(aiBike);
   updateAICounter();
   
   return aiBike;
 }
 
-// Handle bike turning for both player and AI
-function handleBikeTurn(bike, direction) {
-  if (direction === 'left') {
-    if (bike === playerBike) {
-      playerDirection.set(playerDirection.z, 0, -playerDirection.x);
-    } else {
-      bike.userData.direction.set(-bike.userData.direction.z, 0, bike.userData.direction.x);
+    /* ------------------ AI SPAWN TIMER ------------------ */
+    function startAISpawnTimer() {
+      aiTimer = 0;
+      if (aiSpawnInterval) clearInterval(aiSpawnInterval);
+      
+      aiSpawnInterval = setInterval(() => {
+        if (isGameOver || isPaused || !gameStarted) return;
+        
+        aiTimer++;
+        if (aiTimer >= 10) { // Spawn a new AI every 10 seconds
+          aiTimer = 0;
+          aiGeneration++;
+          createAIBike();
+          updateAICounter();
+        }
+      }, 1000);
     }
-    bike.userData.targetTilt = -0.3; // Tilt left for left turn (opposite banking)
-  } else if (direction === 'right') {
-    if (bike === playerBike) {
-      playerDirection.set(-playerDirection.z, 0, playerDirection.x);
-    } else {
-      bike.userData.direction.set(bike.userData.direction.z, 0, -bike.userData.direction.x);
-    }
-    bike.userData.targetTilt = 0.3; // Tilt right for right turn (opposite banking)
-  }
-}
 
-// Add trail for any bike
-function addTrail(bike) {
-  const bikeColor = bike.userData.color;
-  const isPlayer = bike === playerBike;
-  
-  // Create a glowing wall trail
-  const trailGeometry = new THREE.BoxGeometry(2, 6, 0.8); // Slightly thicker
-  
-  // Create the material for the trail - matching bike color
-  const trailMaterial = new THREE.MeshPhongMaterial({
-    color: bikeColor,
-    emissive: bikeColor,
+    function updateAICounter() {
+      document.getElementById('aiCount').textContent = aiBikes.length;
+      document.getElementById('aiGeneration').textContent = aiGeneration;
+    }
+
+    /* ------------------ OBSTACLES & POWERUPS ------------------ */
+    function createObstacle() {
+      const types = [
+        { geo: new THREE.BoxGeometry(10, 15, 10), color: 0xff5500 },
+        { geo: new THREE.CylinderGeometry(5, 5, 20, 8), color: 0x00ff88 },
+        { geo: new THREE.TetrahedronGeometry(10), color: 0xffff00 }
+      ];
+      const type = types[Math.floor(Math.random() * types.length)];
+      const material = new THREE.MeshPhongMaterial({
+        color: type.color,
+        emissive: type.color,
+        emissiveIntensity: 0.3 + (effectsConfig.master * 0.2)
+      });
+      const obstacle = new THREE.Mesh(type.geo, material);
+
+      let validPosition = false;
+      while (!validPosition) {
+        const x = (Math.random() - 0.5) * (WORLD_SIZE - 40);
+        const z = (Math.random() - 0.5) * (WORLD_SIZE - 40);
+        const distToPlayer = new THREE.Vector3(x, 0, z).distanceTo(playerBike.position);
+        let tooCloseToAI = false;
+        
+        for (let ai of aiBikes) {
+          if (new THREE.Vector3(x, 0, z).distanceTo(ai.position) < 50) {
+            tooCloseToAI = true;
+            break;
+          }
+        }
+        
+        if (distToPlayer > 50 && !tooCloseToAI) {
+          obstacle.position.set(x, 10, z);
+          validPosition = true;
+        }
+      }
+      scene.add(obstacle);
+      obstacles.push(obstacle);
+    }
+
+    function createPowerup() {
+      const geometry = new THREE.SphereGeometry(3, 16, 16);
+      const material = new THREE.MeshPhongMaterial({
+        color: 0xffffff,
+        emissive: 0xffffff,
+        emissiveIntensity: 0.8 + (effectsConfig.master * 0.4)
+      });
+      const powerup = new THREE.Mesh(geometry, material);
+
+      let validPosition = false;
+      while (!validPosition) {
+        const x = (Math.random() - 0.5) * (WORLD_SIZE - 40);
+        const z = (Math.random() - 0.5) * (WORLD_SIZE - 40);
+        let tooClose = false;
+        for (let obs of obstacles) {
+          if (new THREE.Vector3(x, 0, z).distanceTo(obs.position) < 15) {
+            tooClose = true;
+            break;
+          }
+        }
+        if (!tooClose) {
+          powerup.position.set(x, 3, z);
+          validPosition = true;
+        }
+      }
+      
+      // Add pulsing light to powerups
+      const powerupLight = new THREE.PointLight(0xffffff, 0.7 * (1 + effectsConfig.master), 
+                                              15 * (1 + effectsConfig.master));
+      powerupLight.position.copy(powerup.position);
+      scene.add(powerupLight);
+      
+      powerup.userData = { light: powerupLight };
+      scene.add(powerup);
+      powerups.push(powerup);
+    }
+
+    /* ------------------ TRAILS ------------------ */
+    function addPlayerTrail() {
+  const playerColor = new THREE.Color(effectsConfig.playerColor);
+  // Create a tall, thin trail segment matching bike dimensions
+  const geometry = new THREE.BoxGeometry(2, 6, 0.5);
+  const material = new THREE.MeshPhongMaterial({
+    color: playerColor,
+    emissive: playerColor,
     emissiveIntensity: 0.7 + (effectsConfig.master * 0.3),
     transparent: true,
     opacity: 0.8
   });
-  
-  const segment = new THREE.Mesh(trailGeometry, trailMaterial);
-  segment.position.copy(bike.position);
-  segment.position.y = 2; // Position at bike height
+  const segment = new THREE.Mesh(geometry, material);
+  segment.position.copy(playerBike.position);
+  // No need to adjust y position as the bike is now at the correct height
   
   // Align trail with bike direction
-  const direction = isPlayer ? playerDirection : bike.userData.direction;
-  segment.rotation.y = Math.atan2(direction.z, direction.x);
-  segment.rotation.z = bike.rotation.z; // Match bike tilt
+  segment.rotation.y = Math.atan2(playerDirection.z, playerDirection.x);
+  segment.rotation.z = playerBike.rotation.z; // Match bike tilt
   
   scene.add(segment);
 
-  if (isPlayer) {
-    playerTrail.push({ mesh: segment, time: clock.getElapsedTime() });
-    if (playerTrail.length > playerTailLength) {
-      const oldest = playerTrail.shift();
-      scene.remove(oldest.mesh);
-    }
-  } else {
-    bike.userData.trail.push({ mesh: segment, time: clock.getElapsedTime() });
-    if (bike.userData.trail.length > bike.userData.tailLength) {
-      const oldest = bike.userData.trail.shift();
-      scene.remove(oldest.mesh);
-    }
+  playerTrail.push({ mesh: segment, time: clock.getElapsedTime() });
+  if (playerTrail.length > playerTailLength) {
+    const oldest = playerTrail.shift();
+    scene.remove(oldest.mesh);
   }
 }
 
-/* ------------------ WORLD BOUNDARIES ------------------ */
-function createWorldBoundaries() {
-  const wallHeight = 20;
-  const wallMaterial = new THREE.MeshPhongMaterial({
-    color: 0x0088ff,
-    emissive: 0x0044aa,
+function addAITrail(aiBike) {
+  // Create a tall, thin trail segment matching bike dimensions
+  const geometry = new THREE.BoxGeometry(2, 6, 0.5);
+  const material = new THREE.MeshPhongMaterial({
+    color: aiBike.userData.color,
+    emissive: aiBike.userData.color,
+    emissiveIntensity: 0.7 + (effectsConfig.master * 0.3),
     transparent: true,
-    opacity: 0.3 + (effectsConfig.master * 0.1) // More visible at higher intensities
+    opacity: 0.8
   });
-
-  const northWall = new THREE.Mesh(new THREE.BoxGeometry(WORLD_SIZE, wallHeight, 2), wallMaterial);
-  northWall.position.set(0, wallHeight/2, -WORLD_SIZE/2);
-  scene.add(northWall);
-  obstacles.push(northWall);
-
-  const southWall = new THREE.Mesh(new THREE.BoxGeometry(WORLD_SIZE, wallHeight, 2), wallMaterial);
-  southWall.position.set(0, wallHeight/2, WORLD_SIZE/2);
-  scene.add(southWall);
-  obstacles.push(southWall);
-
-  const eastWall = new THREE.Mesh(new THREE.BoxGeometry(2, wallHeight, WORLD_SIZE), wallMaterial);
-  eastWall.position.set(WORLD_SIZE/2, wallHeight/2, 0);
-  scene.add(eastWall);
-  obstacles.push(eastWall);
-
-  const westWall = new THREE.Mesh(new THREE.BoxGeometry(2, wallHeight, WORLD_SIZE), wallMaterial);
-  westWall.position.set(-WORLD_SIZE/2, wallHeight/2, 0);
-  scene.add(westWall);
-  obstacles.push(westWall);
-}
-
-/* ------------------ AI SPAWN TIMER ------------------ */
-function startAISpawnTimer() {
-  aiTimer = 0;
-  if (aiSpawnInterval) clearInterval(aiSpawnInterval);
+  const segment = new THREE.Mesh(geometry, material);
+  segment.position.copy(aiBike.position);
+  // No need to adjust y position as the bike is now at the correct height
   
-  aiSpawnInterval = setInterval(() => {
-    if (isGameOver || isPaused || !gameStarted) return;
-    
-    aiTimer++;
-    if (aiTimer >= 10) { // Spawn a new AI every 10 seconds
-      aiTimer = 0;
-      aiGeneration++;
-      createAIBike();
-      updateAICounter();
-    }
-  }, 1000);
-}
-
-function updateAICounter() {
-  document.getElementById('aiCount').textContent = aiBikes.length;
-  document.getElementById('aiGeneration').textContent = aiGeneration;
-}
-
-/* ------------------ OBSTACLES & POWERUPS ------------------ */
-function createObstacle() {
-  const types = [
-    { geo: new THREE.BoxGeometry(10, 15, 10), color: 0xff5500 },
-    { geo: new THREE.CylinderGeometry(5, 5, 20, 8), color: 0x00ff88 },
-    { geo: new THREE.TetrahedronGeometry(10), color: 0xffff00 }
-  ];
-  const type = types[Math.floor(Math.random() * types.length)];
-  const material = new THREE.MeshPhongMaterial({
-    color: type.color,
-    emissive: type.color,
-    emissiveIntensity: 0.3 + (effectsConfig.master * 0.2)
-  });
-  const obstacle = new THREE.Mesh(type.geo, material);
-
-  let validPosition = false;
-  while (!validPosition) {
-    const x = (Math.random() - 0.5) * (WORLD_SIZE - 40);
-    const z = (Math.random() - 0.5) * (WORLD_SIZE - 40);
-    const distToPlayer = new THREE.Vector3(x, 0, z).distanceTo(playerBike.position);
-    let tooCloseToAI = false;
-    
-    for (let ai of aiBikes) {
-      if (new THREE.Vector3(x, 0, z).distanceTo(ai.position) < 50) {
-        tooCloseToAI = true;
-        break;
-      }
-    }
-    
-    if (distToPlayer > 50 && !tooCloseToAI) {
-      obstacle.position.set(x, 10, z);
-      validPosition = true;
-    }
-  }
-  scene.add(obstacle);
-  obstacles.push(obstacle);
-}
-
-function createPowerup() {
-  const geometry = new THREE.SphereGeometry(3, 16, 16);
-  const material = new THREE.MeshPhongMaterial({
-    color: 0xffffff,
-    emissive: 0xffffff,
-    emissiveIntensity: 0.8 + (effectsConfig.master * 0.4)
-  });
-  const powerup = new THREE.Mesh(geometry, material);
-
-  let validPosition = false;
-  while (!validPosition) {
-    const x = (Math.random() - 0.5) * (WORLD_SIZE - 40);
-    const z = (Math.random() - 0.5) * (WORLD_SIZE - 40);
-    let tooClose = false;
-    for (let obs of obstacles) {
-      if (new THREE.Vector3(x, 0, z).distanceTo(obs.position) < 15) {
-        tooClose = true;
-        break;
-      }
-    }
-    if (!tooClose) {
-      powerup.position.set(x, 3, z);
-      validPosition = true;
-    }
-  }
+  // Align trail with bike direction
+  segment.rotation.y = Math.atan2(aiBike.userData.direction.z, aiBike.userData.direction.x);
+  segment.rotation.z = aiBike.rotation.z; // Match bike tilt
   
-  // Add pulsing light to powerups
-  const powerupLight = new THREE.PointLight(0xffffff, 0.7 * (1 + effectsConfig.master), 
-                                          15 * (1 + effectsConfig.master));
-  powerupLight.position.copy(powerup.position);
-  scene.add(powerupLight);
-  
-  powerup.userData = { light: powerupLight };
-  scene.add(powerup);
-  powerups.push(powerup);
+  scene.add(segment);
+
+  aiBike.userData.trail.push({ mesh: segment, time: clock.getElapsedTime() });
+  if (aiBike.userData.trail.length > aiBike.userData.tailLength) {
+    const oldest = aiBike.userData.trail.shift();
+    scene.remove(oldest.mesh);
+  }
 }
 
-/* ------------------ ENHANCED AI LOGIC ------------------ */
-function evaluateDirection(aiBike, direction) {
-  const lookaheadDistance = 30 * aiBike.userData.characteristics.avoidDistance / knowledgeBase.avoidDistance;
-  const futurePosition = aiBike.position.clone().add(direction.clone().multiplyScalar(lookaheadDistance));
-  let score = 100 * aiBike.userData.characteristics.riskTolerance;
 
-  // Store distances for learning
-  const distances = {
-    walls: Infinity,
-    obstacles: Infinity,
-    playerTrail: Infinity,
-    aiTrails: Infinity,
-    closestPowerup: Infinity
-  };
+    /* ------------------ ENHANCED AI LOGIC ------------------ */
+    function evaluateDirection(aiBike, direction) {
+      const lookaheadDistance = 30 * aiBike.userData.characteristics.avoidDistance / knowledgeBase.avoidDistance;
+      const futurePosition = aiBike.position.clone().add(direction.clone().multiplyScalar(lookaheadDistance));
+      let score = 100 * aiBike.userData.characteristics.riskTolerance;
 
-  // Penalty for nearing boundaries - weighted by AI's knowledge
-  const distToBoundaryX = WORLD_SIZE/2 - Math.abs(futurePosition.x);
-  const distToBoundaryZ = WORLD_SIZE/2 - Math.abs(futurePosition.z);
-  const distToBoundary = Math.min(distToBoundaryX, distToBoundaryZ);
-  distances.walls = distToBoundary;
-  
-  if (distToBoundary < 20) {
-    score -= (1000 * knowledgeBase.avoidWallWeight * (20 - distToBoundary) / 20);
-  }
+      // Store distances for learning
+      const distances = {
+        walls: Infinity,
+        obstacles: Infinity,
+        playerTrail: Infinity,
+        aiTrails: Infinity,
+        closestPowerup: Infinity
+      };
 
-  // Obstacle collisions - weighted by AI's knowledge
-  for (let obstacle of obstacles) {
-    const distance = futurePosition.distanceTo(obstacle.position);
-    distances.obstacles = Math.min(distances.obstacles, distance);
-    
-    const collisionThreshold = 15 * aiBike.userData.characteristics.riskTolerance;
-    if (distance < collisionThreshold) {
-      score -= 500 * (collisionThreshold - distance) / collisionThreshold;
-    }
-  }
-
-  // Player trail
-  for (let segment of playerTrail) {
-    const distance = futurePosition.distanceTo(segment.mesh.position);
-    distances.playerTrail = Math.min(distances.playerTrail, distance);
-    if (distance < 10) score -= 400;
-  }
-
-  // All AI trails including own trail
-  for (let otherAI of aiBikes) {
-    for (let i = 0; i < otherAI.userData.trail.length; i++) {
-      // Skip the most recent segments of own trail
-      if (otherAI === aiBike && i >= otherAI.userData.trail.length - 3) continue;
+      // Penalty for nearing boundaries - weighted by AI's knowledge
+      const distToBoundaryX = WORLD_SIZE/2 - Math.abs(futurePosition.x);
+      const distToBoundaryZ = WORLD_SIZE/2 - Math.abs(futurePosition.z);
+      const distToBoundary = Math.min(distToBoundaryX, distToBoundaryZ);
+      distances.walls = distToBoundary;
       
-      const segment = otherAI.userData.trail[i];
-      const distance = futurePosition.distanceTo(segment.mesh.position);
-      distances.aiTrails = Math.min(distances.aiTrails, distance);
+      if (distToBoundary < 20) {
+        score -= (1000 * knowledgeBase.avoidWallWeight * (20 - distToBoundary) / 20);
+      }
+
+      // Obstacle collisions - weighted by AI's knowledge
+      for (let obstacle of obstacles) {
+        const distance = futurePosition.distanceTo(obstacle.position);
+        distances.obstacles = Math.min(distances.obstacles, distance);
+        
+        const collisionThreshold = 15 * aiBike.userData.characteristics.riskTolerance;
+        if (distance < collisionThreshold) {
+          score -= 500 * (collisionThreshold - distance) / collisionThreshold;
+        }
+      }
+
+      // Player trail
+      for (let segment of playerTrail) {
+        const distance = futurePosition.distanceTo(segment.mesh.position);
+        distances.playerTrail = Math.min(distances.playerTrail, distance);
+        if (distance < 10) score -= 400;
+      }
+
+      // All AI trails including own trail
+      for (let otherAI of aiBikes) {
+        for (let i = 0; i < otherAI.userData.trail.length; i++) {
+          // Skip the most recent segments of own trail
+          if (otherAI === aiBike && i >= otherAI.userData.trail.length - 3) continue;
+          
+          const segment = otherAI.userData.trail[i];
+          const distance = futurePosition.distanceTo(segment.mesh.position);
+          distances.aiTrails = Math.min(distances.aiTrails, distance);
+          
+          if (distance < 10) {
+            // Avoiding own trail is more important than other AI trails
+            const weight = (otherAI === aiBike) ? 1.2 : 0.8;
+            score -= 400 * weight;
+          }
+        }
+      }
+
+      // Seek powerups - weighted by AI's powerup preference
+      for (let powerup of powerups) {
+        const distance = futurePosition.distanceTo(powerup.position);
+        distances.closestPowerup = Math.min(distances.closestPowerup, distance);
+        
+        if (distance < 50) {
+          // Higher generation AIs are better at valuing powerups
+          const powerupWeight = aiBike.userData.characteristics.powerupWeight * 
+                               (1 + (aiBike.userData.generation - 1) * 0.1);
+          score += powerupWeight * (1 - distance / 50);
+        }
+      }
+
+      // Move toward player (more aggressive at higher generations)
+      if (aiBike.userData.generation > 2) {
+        const distToPlayer = futurePosition.distanceTo(playerBike.position);
+        // Target the player but not too close (to avoid collision with player trail)
+        const optimalDistance = 50;
+        const targetScore = 30 * (aiBike.userData.generation - 2);
+        
+        if (distToPlayer > optimalDistance) {
+          // Move closer to player
+          score += targetScore * (1 - Math.min(1, (distToPlayer - optimalDistance) / 100));
+        } else if (distToPlayer < 20) {
+          // Too close to player, back off a bit to avoid collision
+          score -= 100 * (1 - distToPlayer / 20);
+        }
+      }
+
+      // Add some randomness to encourage exploration
+      score += (Math.random() - 0.5) * 20 * aiBike.userData.characteristics.turnRandomness;
       
-      if (distance < 10) {
-        // Avoiding own trail is more important than other AI trails
-        const weight = (otherAI === aiBike) ? 1.2 : 0.8;
-        score -= 400 * weight;
+      // Bias toward preferred turn direction
+      if (aiBike.userData.characteristics.preferredTurn === 'left' && 
+          direction.equals(new THREE.Vector3(-aiBike.userData.direction.z, 0, aiBike.userData.direction.x))) {
+        score += 10;
+      } else if (aiBike.userData.characteristics.preferredTurn === 'right' && 
+                direction.equals(new THREE.Vector3(aiBike.userData.direction.z, 0, -aiBike.userData.direction.x))) {
+        score += 10;
+      }
+      
+      return { score, distances };
+    }
+
+    function updateAIDirection(aiBike) {
+      const now = clock.getElapsedTime();
+      if (now < aiBike.userData.lastTurnTime + (0.5 / aiBike.userData.speed)) return;
+
+      // Make decisions more frequently as generations increase
+      const decisionRate = 0.5 - Math.min(0.3, (aiBike.userData.generation - 1) * 0.05);
+      aiBike.userData.lastTurnTime = now + Math.random() * decisionRate;
+      
+      const forward = aiBike.userData.direction.clone();
+      const left = new THREE.Vector3(-aiBike.userData.direction.z, 0, aiBike.userData.direction.x);
+      const right = new THREE.Vector3(aiBike.userData.direction.z, 0, -aiBike.userData.direction.x);
+
+      const evaluations = {
+        forward: evaluateDirection(aiBike, forward),
+        left: evaluateDirection(aiBike, left),
+        right: evaluateDirection(aiBike, right)
+      };
+
+      let bestDirection = 'forward';
+      if (evaluations.left.score > evaluations.forward.score && 
+          evaluations.left.score > evaluations.right.score) {
+        bestDirection = 'left';
+      } else if (evaluations.right.score > evaluations.forward.score && 
+                evaluations.right.score > evaluations.left.score) {
+        bestDirection = 'right';
+      }
+
+      function handleAITurn(aiBike, direction) {
+  if (direction === 'left') {
+    aiBike.userData.direction.set(-aiBike.userData.direction.z, 0, aiBike.userData.direction.x);
+    aiBike.userData.targetTilt = 0.3; // Tilt right for left turn (banking)
+  } else if (direction === 'right') {
+    aiBike.userData.direction.set(aiBike.userData.direction.z, 0, -aiBike.userData.direction.x);
+    aiBike.userData.targetTilt = -0.3; // Tilt left for right turn (banking)
+  }
+}
+
+      // Learn from this decision
+      learnFromDecision(aiBike, evaluations, bestDirection);
+
+      if (bestDirection === 'left') {
+        // Turn left
+        aiBike.userData.direction.set(-aiBike.userData.direction.z, 0, aiBike.userData.direction.x);
+      } else if (bestDirection === 'right') {
+        // Turn right
+        aiBike.userData.direction.set(aiBike.userData.direction.z, 0, -aiBike.userData.direction.x);
       }
     }
-  }
 
-  // Seek powerups - weighted by AI's powerup preference
-  for (let powerup of powerups) {
-    const distance = futurePosition.distanceTo(powerup.position);
-    distances.closestPowerup = Math.min(distances.closestPowerup, distance);
-    
-    if (distance < 50) {
-      // Higher generation AIs are better at valuing powerups
-      const powerupWeight = aiBike.userData.characteristics.powerupWeight * 
-                           (1 + (aiBike.userData.generation - 1) * 0.1);
-      score += powerupWeight * (1 - distance / 50);
+    /* ------------------ AI LEARNING ------------------ */
+    function learnFromDecision(aiBike, evaluations, chosenDirection) {
+      // Record the current position and direction for later learning
+      aiBike.userData.lastPosition = aiBike.position.clone();
+      aiBike.userData.lastEvaluation = evaluations[chosenDirection];
     }
-  }
 
-  // Move toward player (more aggressive at higher generations)
-  if (aiBike.userData.generation > 2) {
-    const distToPlayer = futurePosition.distanceTo(playerBike.position);
-    // Target the player but not too close (to avoid collision with player trail)
-    const optimalDistance = 50;
-    const targetScore = 30 * (aiBike.userData.generation - 2);
-    
-    if (distToPlayer > optimalDistance) {
-      // Move closer to player
-      score += targetScore * (1 - Math.min(1, (distToPlayer - optimalDistance) / 100));
-    } else if (distToPlayer < 20) {
-      // Too close to player, back off a bit to avoid collision
-      score -= 100 * (1 - distToPlayer / 20);
+    function learnFromSuccess(aiBike) {
+      // AI collected a powerup, reinforce behavior
+      aiBike.userData.powerupsCollected++;
+      
+      // Adjust characteristics based on success
+      if (aiBike.userData.lastEvaluation) {
+        // If it was close to a powerup and got it, increase powerup weight
+        const lr = knowledgeBase.learningRate;
+        aiBike.userData.characteristics.powerupWeight += lr * 5;
+        
+        // Update shared knowledge base
+        knowledgeBase.powerupWeight = (knowledgeBase.powerupWeight * (aiGeneration - 1) + 
+                                     aiBike.userData.characteristics.powerupWeight) / aiGeneration;
+      }
     }
-  }
 
-  // Add some randomness to encourage exploration
-  score += (Math.random() - 0.5) * 20 * aiBike.userData.characteristics.turnRandomness;
-  
-  // Bias toward preferred turn direction
-  if (aiBike.userData.characteristics.preferredTurn === 'left' && 
-      direction.equals(new THREE.Vector3(-aiBike.userData.direction.z, 0, aiBike.userData.direction.x))) {
-    score += 10;
-  } else if (aiBike.userData.characteristics.preferredTurn === 'right' && 
-            direction.equals(new THREE.Vector3(aiBike.userData.direction.z, 0, -aiBike.userData.direction.x))) {
-    score += 10;
-  }
-  
-  return { score, distances };
-}
-
-function updateAIDirection(aiBike) {
-  const now = clock.getElapsedTime();
-  if (now < aiBike.userData.lastTurnTime + (0.5 / aiBike.userData.speed)) return;
-
-  // Make decisions more frequently as generations increase
-  const decisionRate = 0.5 - Math.min(0.3, (aiBike.userData.generation - 1) * 0.05);
-  aiBike.userData.lastTurnTime = now + Math.random() * decisionRate;
-  
-  const forward = aiBike.userData.direction.clone();
-  const left = new THREE.Vector3(-aiBike.userData.direction.z, 0, aiBike.userData.direction.x);
-  const right = new THREE.Vector3(aiBike.userData.direction.z, 0, -aiBike.userData.direction.x);
-
-  const evaluations = {
-    forward: evaluateDirection(aiBike, forward),
-    left: evaluateDirection(aiBike, left),
-    right: evaluateDirection(aiBike, right)
-  };
-
-  let bestDirection = 'forward';
-  if (evaluations.left.score > evaluations.forward.score && 
-      evaluations.left.score > evaluations.right.score) {
-    bestDirection = 'left';
-  } else if (evaluations.right.score > evaluations.forward.score && 
-            evaluations.right.score > evaluations.left.score) {
-    bestDirection = 'right';
-  }
-
-  // Learn from this decision
-  learnFromDecision(aiBike, evaluations, bestDirection);
-
-  if (bestDirection === 'left' || bestDirection === 'right') {
-    handleBikeTurn(aiBike, bestDirection);
-  }
-}
-
-/* ------------------ AI LEARNING ------------------ */
-function learnFromDecision(aiBike, evaluations, chosenDirection) {
-  // Record the current position and direction for later learning
-  aiBike.userData.lastPosition = aiBike.position.clone();
-  aiBike.userData.lastEvaluation = evaluations[chosenDirection];
-}
-
-function learnFromSuccess(aiBike) {
-  // AI collected a powerup, reinforce behavior
-  aiBike.userData.powerupsCollected++;
-  
-  // Adjust characteristics based on success
-  if (aiBike.userData.lastEvaluation) {
-    // If it was close to a powerup and got it, increase powerup weight
-    const lr = knowledgeBase.learningRate;
-    aiBike.userData.characteristics.powerupWeight += lr * 5;
-    
-    // Update shared knowledge base
-    knowledgeBase.powerupWeight = (knowledgeBase.powerupWeight * (aiGeneration - 1) + 
-                                 aiBike.userData.characteristics.powerupWeight) / aiGeneration;
-  }
-}
-
-function learnFromCrash(aiBike, causeOfCrash) {
-  aiBike.userData.crashCount++;
-  
-  // Learn from this crash
-  const lr = knowledgeBase.learningRate;
-  
-  if (aiBike.userData.lastEvaluation) {
-    if (causeOfCrash === 'wall') {
-      // Crashed into wall, increase wall avoidance
-      aiBike.userData.characteristics.avoidDistance += lr * 5;
-      knowledgeBase.avoidWallWeight += lr;
-    } else if (causeOfCrash === 'obstacle' || causeOfCrash === 'trail') {
-      // Crashed into obstacle or trail, increase avoid distance
-      aiBike.userData.characteristics.avoidDistance += lr * 3;
+    function learnFromCrash(aiBike, causeOfCrash) {
+      aiBike.userData.crashCount++;
+      
+      // Learn from this crash
+      const lr = knowledgeBase.learningRate;
+      
+      if (aiBike.userData.lastEvaluation) {
+        if (causeOfCrash === 'wall') {
+          // Crashed into wall, increase wall avoidance
+          aiBike.userData.characteristics.avoidDistance += lr * 5;
+          knowledgeBase.avoidWallWeight += lr;
+        } else if (causeOfCrash === 'obstacle' || causeOfCrash === 'trail') {
+          // Crashed into obstacle or trail, increase avoid distance
+          aiBike.userData.characteristics.avoidDistance += lr * 3;
+        }
+        
+        // Decrease randomness for more predictability
+        aiBike.userData.characteristics.turnRandomness -= lr * 0.05;
+        aiBike.userData.characteristics.turnRandomness = Math.max(0.05, aiBike.userData.characteristics.turnRandomness);
+        
+        // Update global knowledge base
+        knowledgeBase.avoidDistance = (knowledgeBase.avoidDistance * (aiGeneration - 1) + 
+                                     aiBike.userData.characteristics.avoidDistance) / aiGeneration;
+      }
+      
+      // Respawn AI
+      respawnAI(aiBike);
     }
-    
-    // Decrease randomness for more predictability
-    aiBike.userData.characteristics.turnRandomness -= lr * 0.05;
-    aiBike.userData.characteristics.turnRandomness = Math.max(0.05, aiBike.userData.characteristics.turnRandomness);
-    
-    // Update global knowledge base
-    knowledgeBase.avoidDistance = (knowledgeBase.avoidDistance * (aiGeneration - 1) + 
-                                 aiBike.userData.characteristics.avoidDistance) / aiGeneration;
+
+    function respawnAI(aiBike) {
+      // Clear trail
+      for (let segment of aiBike.userData.trail) {
+        scene.remove(segment.mesh);
+      }
+      aiBike.userData.trail = [];
+      
+      // Randomize new position
+      const randomX = (Math.random() - 0.5) * (WORLD_SIZE - 100);
+      const randomZ = (Math.random() - 0.5) * (WORLD_SIZE - 100);
+      aiBike.position.set(randomX, 2, randomZ);
+      
+      // Random new direction
+      const angles = [0, Math.PI/2, Math.PI, -Math.PI/2];
+      const randomAngle = angles[Math.floor(Math.random() * angles.length)];
+      aiBike.userData.direction.set(Math.cos(randomAngle), 0, Math.sin(randomAngle));
+      
+      // Reset tail length
+      aiBike.userData.tailLength = 5;
+    }
+
+    /* ------------------ COLLISION CHECKS ------------------ */
+    function checkPlayerCollisions() {
+      // Boundaries
+      if (
+        Math.abs(playerBike.position.x) > WORLD_SIZE/2 - 5 ||
+        Math.abs(playerBike.position.z) > WORLD_SIZE/2 - 5
+      ) return { collision: true, reason: "wall" };
+      
+      // Obstacles
+      for (let obstacle of obstacles) {
+        const distance = playerBike.position.distanceTo(obstacle.position);
+        if (distance < 10) return { collision: true, reason: "obstacle" };
+      }
+      
+      // Own trail
+      for (let i = 0; i < playerTrail.length - 5; i++) {
+        const segment = playerTrail[i];
+        const distance = playerBike.position.distanceTo(segment.mesh.position);
+        if (distance < 3) return { collision: true, reason: "own trail" };
+      }
+      
+      // AI trails
+      for (let aiBike of aiBikes) {
+        // AI bike itself
+        if (playerBike.position.distanceTo(aiBike.position) < 5) {
+          return { collision: true, reason: "AI bike" };
+        }
+        
+        // AI trails
+        for (let segment of aiBike.userData.trail) {
+          const distance = playerBike.position.distanceTo(segment.mesh.position);
+          if (distance < 3) return { collision: true, reason: "AI trail" };
+        }
+      }
+
+      return { collision: false };
+    }
+
+    function checkAICollisions(aiBike) {
+      // Boundaries
+      if (
+        Math.abs(aiBike.position.x) > WORLD_SIZE/2 - 5 ||
+        Math.abs(aiBike.position.z) > WORLD_SIZE/2 - 5
+      ) return { collision: true, reason: "wall" };
+      
+      // Obstacles
+      for (let obstacle of obstacles) {
+        const distance = aiBike.position.distanceTo(obstacle.position);
+        if (distance < 10) return { collision: true, reason: "obstacle" };
+      }
+      
+      // Own trail
+      for (let i = 0; i < aiBike.userData.trail.length - 5; i++) {
+        const segment = aiBike.userData.trail[i];
+        const distance = aiBike.position.distanceTo(segment.mesh.position);
+        if (distance < 3) return { collision: true, reason: "own trail" };
+      }
+      
+      // Player trail
+      for (let segment of playerTrail) {
+        const distance = aiBike.position.distanceTo(segment.mesh.position);
+        if (distance < 3) return { collision: true, reason: "player trail" };
+      }
+      
+      // Player bike
+      if (aiBike.position.distanceTo(playerBike.position) < 5) {
+        return { collision: true, reason: "player bike" };
+      }
+      
+      // Other AI trails and bikes
+      for (let otherAI of aiBikes) {
+        if (otherAI === aiBike) continue;
+        
+        // Other AI bike
+        if (aiBike.position.distanceTo(otherAI.position) < 5) {
+          return { collision: true, reason: "other AI bike" };
+        }
+        
+        // Other AI trails
+        for (let segment of otherAI.userData.trail) {
+          const distance = aiBike.position.distanceTo(segment.mesh.position);
+          if (distance < 3) return { collision: true, reason: "other AI trail" };
+        }
+      }
+
+      return { collision: false };
+    }
+
+    /* ------------------ POWERUPS ------------------ */
+    function checkPowerups() {
+      for (let i = powerups.length - 1; i >= 0; i--) {
+        const powerup = powerups[i];
+        
+        // Player collects
+        if (playerBike.position.distanceTo(powerup.position) < 5) {
+          scene.remove(powerup);
+          if (powerup.userData.light) scene.remove(powerup.userData.light);
+          powerups.splice(i, 1);
+          playerTailLength += 5;
+          setTimeout(createPowerup, 2000);
+          continue;
+        }
+        
+        // AI collects
+        for (let aiBike of aiBikes) {
+          if (aiBike.position.distanceTo(powerup.position) < 5) {
+            scene.remove(powerup);
+            if (powerup.userData.light) scene.remove(powerup.userData.light);
+            powerups.splice(i, 1);
+            aiBike.userData.tailLength += 5;
+            learnFromSuccess(aiBike);
+            setTimeout(createPowerup, 2000);
+            break;
+          }
+        }
+      }
+    }
+
+    /* ------------------ INPUT ------------------ */
+    function onKeyDown(event) {
+      if (!gameStarted || isGameOver && event.keyCode !== 82) return;
+
+      switch (event.keyCode) {
+        case 37: // Left arrow => turn left
+          if (!isPaused) {
+            playerDirection.set(playerDirection.z, 0, -playerDirection.x);
+          }
+          break;
+        case 39: // Right arrow => turn right
+          if (!isPaused) {
+            playerDirection.set(-playerDirection.z, 0, playerDirection.x);
+          }
+          break;
+        case 82: // R key => restart
+          restartGame();
+          break;
+        case 80: // P key => pause/unpause
+          togglePause();
+          break;
+        case 69: // E key => toggle effects panel
+          const panel = document.getElementById('effectsPanel');
+          panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+          break;
+      }
+
+      // Handle player turn
+function handlePlayerTurn(direction) {
+  if (direction === 'left') {
+    playerDirection.set(playerDirection.z, 0, -playerDirection.x);
+    playerBike.userData.targetTilt = 0.3; // Tilt right for left turn (banking)
+  } else if (direction === 'right') {
+    playerDirection.set(-playerDirection.z, 0, playerDirection.x);
+    playerBike.userData.targetTilt = -0.3; // Tilt left for right turn (banking)
   }
-  
-  // Respawn AI
-  respawnAI(aiBike);
 }
-
-function respawnAI(aiBike) {
-  // Clear trail
-  for (let segment of aiBike.userData.trail) {
-    scene.remove(segment.mesh);
-  }
-  aiBike.userData.trail = [];
-  
-  // Randomize new position
-  const randomX = (Math.random() - 0.5) * (WORLD_SIZE - 100);
-  const randomZ = (Math.random() - 0.5) * (WORLD_SIZE - 100);
-  aiBike.position.set(randomX, 2, randomZ);
-  
-  // Random new direction
-  const angles = [0, Math.PI/2, Math.PI, -Math.PI/2];
-  const randomAngle = angles[Math.floor(Math.random() * angles.length)];
-  aiBike.userData.direction.set(Math.cos(randomAngle), 0, Math.sin(randomAngle));
-  
-  // Reset tail length
-  aiBike.userData.tailLength = 5;
-}
-
-/* ------------------ COLLISION CHECKS ------------------ */
-function checkPlayerCollisions() {
-  // Boundaries
-  if (
-    Math.abs(playerBike.position.x) > WORLD_SIZE/2 - 5 ||
-    Math.abs(playerBike.position.z) > WORLD_SIZE/2 - 5
-  ) return { collision: true, reason: "wall" };
-  
-  // Obstacles
-  for (let obstacle of obstacles) {
-    const distance = playerBike.position.distanceTo(obstacle.position);
-    if (distance < 10) return { collision: true, reason: "obstacle" };
-  }
-  
-  // Own trail
-  for (let i = 0; i < playerTrail.length - 5; i++) {
-    const segment = playerTrail[i];
-    const distance = playerBike.position.distanceTo(segment.mesh.position);
-    if (distance < 3) return { collision: true, reason: "own trail" };
-  }
-  
-  // AI trails
-  for (let aiBike of aiBikes) {
-    // AI bike itself
-    if (playerBike.position.distanceTo(aiBike.position) < 5) {
-      return { collision: true, reason: "AI bike" };
     }
-    
-    // AI trails
-    for (let segment of aiBike.userData.trail) {
-      const distance = playerBike.position.distanceTo(segment.mesh.position);
-      if (distance < 3) return { collision: true, reason: "AI trail" };
-    }
-  }
 
-  return { collision: false };
-}
-
-function checkAICollisions(aiBike) {
-  // Boundaries
-  if (
-    Math.abs(aiBike.position.x) > WORLD_SIZE/2 - 5 ||
-    Math.abs(aiBike.position.z) > WORLD_SIZE/2 - 5
-  ) return { collision: true, reason: "wall" };
-  
-  // Obstacles
-  for (let obstacle of obstacles) {
-    const distance = aiBike.position.distanceTo(obstacle.position);
-    if (distance < 10) return { collision: true, reason: "obstacle" };
-  }
-  
-  // Own trail
-  for (let i = 0; i < aiBike.userData.trail.length - 5; i++) {
-    const segment = aiBike.userData.trail[i];
-    const distance = aiBike.position.distanceTo(segment.mesh.position);
-    if (distance < 3) return { collision: true, reason: "own trail" };
-  }
-  
-  // Player trail
-  for (let segment of playerTrail) {
-    const distance = aiBike.position.distanceTo(segment.mesh.position);
-    if (distance < 3) return { collision: true, reason: "player trail" };
-  }
-  
-  // Player bike
-  if (aiBike.position.distanceTo(playerBike.position) < 5) {
-    return { collision: true, reason: "player bike" };
-  }
-  
-  // Other AI trails and bikes
-  for (let otherAI of aiBikes) {
-    if (otherAI === aiBike) continue;
-    
-    // Other AI bike
-    if (aiBike.position.distanceTo(otherAI.position) < 5) {
-      return { collision: true, reason: "other AI bike" };
+    /* ------------------ WINDOW RESIZE ------------------ */
+    function onWindowResize() {
+      setTimeout(() => {
+        if (camera && renderer) {
+          camera.aspect = window.innerWidth / window.innerHeight;
+          camera.updateProjectionMatrix();
+          renderer.setSize(window.innerWidth, window.innerHeight);
+          composer.setSize(window.innerWidth, window.innerHeight);
+          updateCameraForOrientation();
+        }
+      }, 100);
     }
-    
-    // Other AI trails
-    for (let segment of otherAI.userData.trail) {
-      const distance = aiBike.position.distanceTo(segment.mesh.position);
-      if (distance < 3) return { collision: true, reason: "other AI trail" };
-    }
-  }
 
-  return { collision: false };
-}
-
-/* ------------------ POWERUPS ------------------ */
-function checkPowerups() {
-  for (let i = powerups.length - 1; i >= 0; i--) {
-    const powerup = powerups[i];
-    
-    // Player collects
-    if (playerBike.position.distanceTo(powerup.position) < 5) {
-      scene.remove(powerup);
-      if (powerup.userData.light) scene.remove(powerup.userData.light);
-      powerups.splice(i, 1);
-      playerTailLength += 5;
-      setTimeout(createPowerup, 2000);
-      continue;
+    /* ------------------ GAME OVER ------------------ */
+    function gameOver(message) {
+      isGameOver = true;
+      if (aiSpawnInterval) clearInterval(aiSpawnInterval);
+      document.getElementById('gameOverMessage').textContent = message;
+      document.getElementById('gameOver').style.display = 'block';
     }
-    
-    // AI collects
-    for (let aiBike of aiBikes) {
-      if (aiBike.position.distanceTo(powerup.position) < 5) {
+
+    /* ------------------ RESTART ------------------ */
+    function restartGame() {
+      document.getElementById('gameOver').style.display = 'none';
+      
+      // Clean up old objects
+      scene.remove(playerBike);
+      
+      playerTrail.forEach(segment => scene.remove(segment.mesh));
+      playerTrail = [];
+      
+      for (let aiBike of aiBikes) {
+        scene.remove(aiBike);
+        aiBike.userData.trail.forEach(segment => scene.remove(segment.mesh));
+      }
+      aiBikes = [];
+      
+      // Remove obstacles except walls
+      for (let i = obstacles.length - 1; i >= 0; i--) {
+        const obstacle = obstacles[i];
+        // Keep boundary walls but remove other obstacles
+        if (
+          !(obstacle.geometry.type === 'BoxGeometry' && 
+            (Math.abs(obstacle.position.x) === WORLD_SIZE/2 || 
+             Math.abs(obstacle.position.z) === WORLD_SIZE/2))
+        ) {
+          scene.remove(obstacle);
+          obstacles.splice(i, 1);
+        }
+      }
+      
+      // Remove powerups
+      powerups.forEach(powerup => {
         scene.remove(powerup);
         if (powerup.userData.light) scene.remove(powerup.userData.light);
-        powerups.splice(i, 1);
-        aiBike.userData.tailLength += 5;
-        learnFromSuccess(aiBike);
-        setTimeout(createPowerup, 2000);
-        break;
+      });
+      powerups = [];
+
+      // Reset game variables
+      aiGeneration = 1;
+      playerTailLength = 5;
+      isGameOver = false;
+      
+      if (isPaused) {
+        togglePause(); // Unpause the game
       }
+      
+      // Create new game elements
+      createPlayerBike();
+      createAIBike();
+      for (let i = 0; i < 20; i++) createObstacle();
+      for (let i = 0; i < 15; i++) createPowerup();
+      
+      // Restart AI spawn timer
+      startAISpawnTimer();
+
+      // Reset camera based on orientation
+      updateCameraForOrientation();
+      
+      // Make sure game is started
+      gameStarted = true;
     }
-  }
-}
 
-/* ------------------ INPUT ------------------ */
-function onKeyDown(event) {
-  if (!gameStarted || (isGameOver && event.keyCode !== 82)) return;
+    /* ------------------ ANIMATION LOOP ------------------ */
+    function animate() {
+      requestAnimationFrame(animate);
+      const delta = clock.getDelta();
+      const elapsedTime = clock.getElapsedTime();
 
-  switch (event.keyCode) {
-    case 37: // Left arrow => turn left
-      if (!isPaused) {
-        handleBikeTurn(playerBike, 'left');
+      // Update shader uniforms for visual effects
+      // Always update time-based effects even when paused
+      
+      // Color shader
+      if (colorPass && colorPass.uniforms) {
+        colorPass.uniforms.time.value = elapsedTime;
       }
-      break;
-    case 39: // Right arrow => turn right
-      if (!isPaused) {
-        handleBikeTurn(playerBike, 'right');
+      
+      // Scanline shader
+      if (scanlinePass && scanlinePass.uniforms) {
+        scanlinePass.uniforms.time.value = elapsedTime;
       }
-      break;
-    case 82: // R key => restart
-      restartGame();
-      break;
-    case 80: // P key => pause/unpause
-      togglePause();
-      break;
-    case 69: // E key => toggle effects panel
-      const panel = document.getElementById('effectsPanel');
-      panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-      break;
-  }
-}
+      
+      // Always render the scene even when paused
+      composer.render();
+      
+      // If not started, paused, or game over, don't update game state
+      if (!gameStarted || isPaused || isGameOver) return;
 
-/* ------------------ PAUSE GAME ------------------ */
-function togglePause() {
-  if (!gameStarted) return;
-  
-  isPaused = !isPaused;
-  
-  const pauseButton = document.getElementById('pauseButton');
-  const pauseOverlay = document.getElementById('pauseOverlay');
-  
-  if (isPaused) {
-    pauseButton.textContent = 'RESUME';
-    pauseOverlay.style.display = 'flex';
-  } else {
-    pauseButton.textContent = 'PAUSE';
-    pauseOverlay.style.display = 'none';
-  }
-}
+      // Move player
+      const playerMoveStep = playerDirection.clone().multiplyScalar(PLAYER_SPEED);
+      playerBike.position.add(playerMoveStep);
+      const playerAngle = Math.atan2(playerDirection.z, playerDirection.x);
+      playerBike.rotation.y = -playerAngle;
+      
+      if (
+        playerTrail.length === 0 ||
+        playerBike.position.distanceTo(playerTrail[playerTrail.length - 1].mesh.position) > 3
+      ) {
+        addPlayerTrail();
+      }
 
-/* ------------------ GAME OVER ------------------ */
-function gameOver(message) {
-  isGameOver = true;
-  if (aiSpawnInterval) clearInterval(aiSpawnInterval);
-  document.getElementById('gameOverMessage').textContent = message;
-  document.getElementById('gameOver').style.display = 'block';
-}
+      // Move AIs
+      for (let i = aiBikes.length - 1; i >= 0; i--) {
+        const aiBike = aiBikes[i];
+        
+        // Update AI direction
+        updateAIDirection(aiBike);
+        
+        // Move AI
+        const aiMoveStep = aiBike.userData.direction.clone().multiplyScalar(aiBike.userData.speed);
+        aiBike.position.add(aiMoveStep);
+        const aiAngle = Math.atan2(aiBike.userData.direction.z, aiBike.userData.direction.x);
+        aiBike.rotation.y = -aiAngle;
+        
+        // Add trail segment
+        if (
+          aiBike.userData.trail.length === 0 ||
+          aiBike.position.distanceTo(aiBike.userData.trail[aiBike.userData.trail.length - 1].mesh.position) > 3
+        ) {
+          addAITrail(aiBike);
+        }
+        
+        // Check collisions
+        const aiCollision = checkAICollisions(aiBike);
+        if (aiCollision.collision) {
+          learnFromCrash(aiBike, aiCollision.reason);
+        }
+      }
 
-/* ------------------ RESTART ------------------ */
-function restartGame() {
-  document.getElementById('gameOver').style.display = 'none';
-  
-  // Clean up old objects
-  scene.remove(playerBike);
-  
-  playerTrail.forEach(segment => scene.remove(segment.mesh));
-  playerTrail = [];
-  
-  for (let aiBike of aiBikes) {
-    scene.remove(aiBike);
-    aiBike.userData.trail.forEach(segment => scene.remove(segment.mesh));
-  }
-  aiBikes = [];
-  
-  // Remove obstacles except walls
-  for (let i = obstacles.length - 1; i >= 0; i--) {
-    const obstacle = obstacles[i];
-    // Keep boundary walls but remove other obstacles
-    if (
-      !(obstacle.geometry.type === 'BoxGeometry' && 
-        (Math.abs(obstacle.position.x) === WORLD_SIZE/2 || 
-         Math.abs(obstacle.position.z) === WORLD_SIZE/2))
-    ) {
-      scene.remove(obstacle);
-      obstacles.splice(i, 1);
-    }
-  }
-  
-  // Remove powerups
-  powerups.forEach(powerup => {
-    scene.remove(powerup);
-    if (powerup.userData.light) scene.remove(powerup.userData.light);
-  });
-  powerups = [];
-
-  // Reset game variables
-  aiGeneration = 1;
-  playerTailLength = 5;
-  isGameOver = false;
-  
-  if (isPaused) {
-    togglePause(); // Unpause the game
-  }
-  
-  // Create new game elements
-  createPlayerBike();
-  createAIBike();
-  for (let i = 0; i < 20; i++) createObstacle();
-  for (let i = 0; i < 15; i++) createPowerup();
-  
-  // Restart AI spawn timer
-  startAISpawnTimer();
-
-  // Reset camera based on orientation
-  updateCameraForOrientation();
-  
-  // Make sure game is started
-  gameStarted = true;
-}
-
-/* ------------------ BIKE TILTING ------------------ */
-function updateBikeTilt() {
-  // Update all bikes tilting (both player and AI)
-  const bikes = [playerBike, ...aiBikes];
-  
-  for (let bike of bikes) {
-    if (!bike) continue;
-    
-    const targetTilt = bike.userData.targetTilt;
-    const currentTilt = bike.userData.currentTilt;
+      function updateBikeTilt() {
+  // Player bike tilting
+  if (playerBike) {
+    // Calculate tilt based on last turn
+    const targetTilt = playerBike.userData.targetTilt;
+    const currentTilt = playerBike.userData.currentTilt;
     
     // Smoothly interpolate to target tilt
     if (Math.abs(targetTilt - currentTilt) > 0.01) {
-      bike.userData.currentTilt += (targetTilt - currentTilt) * 0.1;
+      playerBike.userData.currentTilt += (targetTilt - currentTilt) * 0.1;
     } else {
       // If close enough, gradually return to neutral
-      bike.userData.targetTilt *= 0.95;
-      bike.userData.currentTilt = bike.userData.targetTilt;
+      playerBike.userData.targetTilt *= 0.95;
+      playerBike.userData.currentTilt = playerBike.userData.targetTilt;
     }
     
     // Apply the tilt rotation
-    bike.rotation.z = bike.userData.currentTilt;
+    playerBike.rotation.z = playerBike.userData.currentTilt;
+  }
+  
+  // AI bikes tilting
+  for (let aiBike of aiBikes) {
+    const targetTilt = aiBike.userData.targetTilt;
+    const currentTilt = aiBike.userData.currentTilt;
+    
+    // Smoothly interpolate to target tilt
+    if (Math.abs(targetTilt - currentTilt) > 0.01) {
+      aiBike.userData.currentTilt += (targetTilt - currentTilt) * 0.1;
+    } else {
+      // If close enough, gradually return to neutral
+      aiBike.userData.targetTilt *= 0.95;
+      aiBike.userData.currentTilt = aiBike.userData.targetTilt;
+    }
+    
+    // Apply the tilt rotation
+    aiBike.rotation.z = aiBike.userData.currentTilt;
   }
 }
 
-/* ------------------ INITIAL SETUP ------------------ */
-function init() {
-  // Create scene
-  scene = new THREE.Scene();
-  scene.background = new THREE.Color(0x000011);
+      // Check player collisions
+      const playerCollision = checkPlayerCollisions();
+      if (playerCollision.collision) {
+        gameOver(`YOU CRASHED INTO ${playerCollision.reason.toUpperCase()}!`);
+      }
 
-  // Create camera
-  camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
-
-  // Create renderer
-  renderer = new THREE.WebGLRenderer({ antialias: true });
-  renderer.setSize(window.innerWidth, window.innerHeight);
-  document.getElementById('gameContainer').appendChild(renderer.domElement);
-
-  // Setup postprocessing
-  composer = new EffectComposer(renderer);
-  const renderPass = new RenderPass(scene, camera);
-  composer.addPass(renderPass);
-
-  // Bloom pass
-  bloomPass = new UnrealBloomPass(
-    new THREE.Vector2(window.innerWidth, window.innerHeight),
-    0.8 * effectsConfig.bloom, // Strength
-    0.3 + (effectsConfig.bloom * 0.2), // Radius
-    0.85 - (effectsConfig.bloom * 0.05) // Threshold
-  );
-  composer.addPass(bloomPass);
-  effectPasses.bloom = bloomPass;
-
-  // Pixelation pass (comes early in the pipeline)
-  pixelPass = new ShaderPass(PixelShader);
-  pixelPass.uniforms.pixelSize.value = effectsConfig.pixel;
-  composer.addPass(pixelPass);
-  effectPasses.pixel = pixelPass;
-
-  // Color adjustment pass
-  colorPass = new ShaderPass(ColorShader);
-  colorPass.uniforms.hueShift.value = effectsConfig.hueShift;
-  colorPass.uniforms.saturation.value = effectsConfig.saturation;
-  colorPass.uniforms.colorPulse.value = effectsConfig.colorPulse;
-  colorPass.uniforms.speed.value = effectsConfig.speed;
-  composer.addPass(colorPass);
-  effectPasses.color = colorPass;
-
-  // Scanline pass
-  scanlinePass = new ShaderPass(ScanlineShader);
-  scanlinePass.uniforms.intensity.value = effectsConfig.scanline;
-  scanlinePass.uniforms.speed.value = effectsConfig.speed;
-  composer.addPass(scanlinePass);
-  effectPasses.scanline = scanlinePass;
-
-  // Glitch pass (optional based on intensity)
-  glitchPass = new GlitchPass();
-  glitchPass.enabled = effectsConfig.glitch > 0;
-  glitchPass.goWild = effectsConfig.wildGlitch;
-  composer.addPass(glitchPass);
-  effectPasses.glitch = glitchPass;
+      function updateBikeTilt() {
+  // Player bike tilting
+  if (playerBike) {
+    // Calculate tilt based on last turn
+    const targetTilt = playerBike.userData.targetTilt;
+    const currentTilt = playerBike.userData.currentTilt;
+    
+    // Smoothly interpolate to target tilt
+    if (Math.abs(targetTilt - currentTilt) > 0.01) {
+      playerBike.userData.currentTilt += (targetTilt - currentTilt) * 0.1;
+    } else {
+      // If close enough, gradually return to neutral
+      playerBike.userData.targetTilt *= 0.95;
+      playerBike.userData.currentTilt = playerBike.userData.targetTilt;
+    }
+    
+    // Apply the tilt rotation
+    playerBike.rotation.z = playerBike.userData.currentTilt;
+  }
   
-  // Update effects with initial settings
-  updateEffects();
-
-  // Basic lighting
-  scene.add(new THREE.AmbientLight(0x444444));
-  const directionalLight = new THREE.DirectionalLight(0xffffff, 1);
-  directionalLight.position.set(0, 100, 0);
-  scene.add(directionalLight);
-
-  // Grid floor with color from settings
-  const gridColor = new THREE.Color(effectsConfig.gridColor);
-  const gridHelper = new THREE.GridHelper(WORLD_SIZE, 50, gridColor, 0x004488);
-  scene.add(gridHelper);
-  materialsToUpdate.grid = gridHelper;
-
-  createWorldBoundaries();
-  createPlayerBike();
-  createAIBike();
-  for (let i = 0; i < 20; i++) createObstacle();
-  for (let i = 0; i < 15; i++) createPowerup();
-
-  // Position camera based on device orientation
-  updateCameraForOrientation();
-
-  // Setup UI controls
-  setupUIControls();
-  
-  // Setup touch controls
-  setupTouchControls();
-  
-  // Load presets
-  initPresets();
-
-  // Event listeners
-  document.addEventListener('keydown', onKeyDown);
-  window.addEventListener('resize', onWindowResize);
-  document.getElementById('restartButton').addEventListener('click', restartGame);
-
-  // Start AI spawn timer
-  startAISpawnTimer();
-
-  // Show splash screen
-  showSplashScreen();
-  
-  // Start animation loop
-  animate();
+  // AI bikes tilting
+  for (let aiBike of aiBikes) {
+    const targetTilt = aiBike.userData.targetTilt;
+    const currentTilt = aiBike.userData.currentTilt;
+    
+    // Smoothly interpolate to target tilt
+    if (Math.abs(targetTilt - currentTilt) > 0.01) {
+      aiBike.userData.currentTilt += (targetTilt - currentTilt) * 0.1;
+    } else {
+      // If close enough, gradually return to neutral
+      aiBike.userData.targetTilt *= 0.95;
+      aiBike.userData.currentTilt = aiBike.userData.targetTilt;
+    }
+    
+    // Apply the tilt rotation
+    aiBike.rotation.z = aiBike.userData.currentTilt;
+  }
 }
 
-/* ------------------ ANIMATION LOOP ------------------ */
-function animate() {
-  requestAnimationFrame(animate);
-  const delta = clock.getDelta();
-  const elapsedTime = clock.getElapsedTime();
 
-  // Update shader uniforms for visual effects
-  // Always update time-based effects even when paused
-  
-  // Color shader
-  if (colorPass && colorPass.uniforms) {
-    colorPass.uniforms.time.value = elapsedTime;
-  }
-  
-  // Scanline shader
-  if (scanlinePass && scanlinePass.uniforms) {
-    scanlinePass.uniforms.time.value = elapsedTime;
-  }
-  
-  // Always render the scene even when paused
-  composer.render();
-  
-  // If not started, paused, or game over, don't update game state
-  if (!gameStarted || isPaused || isGameOver) return;
+      // Powerups
+      checkPowerups();
 
-  // Update bike tilting
-  updateBikeTilt();
-
-  // Move player
-  const playerMoveStep = playerDirection.clone().multiplyScalar(PLAYER_SPEED);
-  playerBike.position.add(playerMoveStep);
-  const playerAngle = Math.atan2(playerDirection.z, playerDirection.x);
-  playerBike.rotation.y = -playerAngle;
-  
-  // Add player trail segment when moved enough
-  if (
-    playerTrail.length === 0 ||
-    playerBike.position.distanceTo(playerTrail[playerTrail.length - 1].mesh.position) > 3
-  ) {
-    addTrail(playerBike);
-  }
-
-  // Check player collisions
-  const playerCollision = checkPlayerCollisions();
-  if (playerCollision.collision) {
-    let message = "GAME OVER";
-    switch (playerCollision.reason) {
-      case "wall":
-        message += "\nYou crashed into a wall";
-        break;
-      case "obstacle":
-        message += "\nYou hit an obstacle";
-        break;
-      case "own trail":
-        message += "\nYou crashed into your own trail";
-        break;
-      case "AI bike":
-        message += "\nYou collided with an AI bike";
-        break;
-      case "AI trail":
-        message += "\nYou crashed into an AI trail";
-        break;
-    }
-    gameOver(message);
-  }
-
-  // Move AIs
-  for (let i = aiBikes.length - 1; i >= 0; i--) {
-    const aiBike = aiBikes[i];
-    
-    // Update AI direction
-    updateAIDirection(aiBike);
-    
-    // Move AI
-    const aiMoveStep = aiBike.userData.direction.clone().multiplyScalar(aiBike.userData.speed);
-    aiBike.position.add(aiMoveStep);
-    const aiAngle = Math.atan2(aiBike.userData.direction.z, aiBike.userData.direction.x);
-    aiBike.rotation.y = -aiAngle;
-    
-    // Add trail segment
-    if (
-      aiBike.userData.trail.length === 0 ||
-      aiBike.position.distanceTo(aiBike.userData.trail[aiBike.userData.trail.length - 1].mesh.position) > 3
-    ) {
-      addTrail(aiBike);
-    }
-    
-    // Check collisions
-    const aiCollision = checkAICollisions(aiBike);
-    if (aiCollision.collision) {
-      learnFromCrash(aiBike, aiCollision.reason);
-    }
-  }
-
-  // Powerups
-  checkPowerups();
-
-  // Update camera position for smooth following
-  // Use different camera positions based on orientation
-  const isPortrait = window.innerHeight > window.innerWidth;
-  
-  const cameraOffset = playerDirection.clone().multiplyScalar(isPortrait ? -50 : -30);
-  cameraOffset.y = isPortrait ? 30 : 15;
-  const targetPosition = playerBike.position.clone().add(cameraOffset);
-  camera.position.lerp(targetPosition, 0.1);
-  camera.lookAt(playerBike.position);
-
-  // Animate powerups with intensity-dependent effects
-  powerups.forEach(powerup => {
-    powerup.rotation.y += 0.02 * effectsConfig.speed;
-    
-    // Hover motion
-    const hoverHeight = 3 + Math.sin(elapsedTime * 2 * effectsConfig.speed) * 0.5;
-    powerup.position.y = hoverHeight;
-    
-    // Pulse the light
-    if (powerup.userData.light) {
-      const baseBrightness = 0.7 * (1 + effectsConfig.bloom * 0.2);
-      const pulseFactor = Math.sin(elapsedTime * 3 * effectsConfig.speed) * 0.3;
-      powerup.userData.light.intensity = baseBrightness + pulseFactor;
+      // Update camera position for smooth following
+      // Use different camera positions based on orientation
+      const isPortrait = window.innerHeight > window.innerWidth;
       
-      // Light follows powerup
-      powerup.userData.light.position.copy(powerup.position);
+      const cameraOffset = playerDirection.clone().multiplyScalar(isPortrait ? -50 : -30);
+      cameraOffset.y = isPortrait ? 30 : 15;
+      const targetPosition = playerBike.position.clone().add(cameraOffset);
+      camera.position.lerp(targetPosition, 0.1);
+      camera.lookAt(playerBike.position);
+
+      // Animate powerups with intensity-dependent effects
+      powerups.forEach(powerup => {
+        powerup.rotation.y += 0.02 * effectsConfig.speed;
+        
+        // Hover motion
+        const hoverHeight = 3 + Math.sin(elapsedTime * 2 * effectsConfig.speed) * 0.5;
+        powerup.position.y = hoverHeight;
+        
+        // Pulse the light
+        if (powerup.userData.light) {
+          const baseBrightness = 0.7 * (1 + effectsConfig.bloom * 0.2);
+          const pulseFactor = Math.sin(elapsedTime * 3 * effectsConfig.speed) * 0.3;
+          powerup.userData.light.intensity = baseBrightness + pulseFactor;
+          
+          // Light follows powerup
+          powerup.userData.light.position.copy(powerup.position);
+        }
+      });
     }
-  });
-}
 
-/* ------------------ PRESET SYSTEM ------------------ */
-// Define some built-in presets
-const builtInPresets = {
-  "default": {
-    master: 1.0,
-    bloom: 1.0,
-    pixel: 1,
-    glitch: 0.0,
-    glitchSeed: 1,
-    scanline: 0.0,
-    speed: 1.0,
-    wildGlitch: false,
-    hueShift: 0,
-    saturation: 1.0,
-    colorPulse: 1.0,
-    playerColor: "#ff00ff",
-    gridColor: "#0088ff"
-  },
-  "retro": {
-    master: 1.2,
-    bloom: 1.0,
-    pixel: 6,
-    glitch: 0.5,
-    glitchSeed: 42,
-    scanline: 3.0,
-    speed: 0.8,
-    wildGlitch: false,
-    hueShift: 250,
-    saturation: 0.9,
-    colorPulse: 1.0,
-    playerColor: "#00ffff",
-    gridColor: "#0055ff"
-  },
-  "cyberpunk": {
-    master: 1.5,
-    bloom: 2.5,
-    pixel: 2,
-    glitch: 2.0,
-    glitchSeed: 137,
-    scanline: 1.0,
-    speed: 1.2,
-    wildGlitch: false,
-    hueShift: 320,
-    saturation: 1.2,
-    colorPulse: 2.0,
-    playerColor: "#ff2288",
-    gridColor: "#00ddff"
-  },
-  "lofi": {
-    master: 0.8,
-    bloom: 0.5,
-    pixel: 8,
-    glitch: 0.3,
-    glitchSeed: 256,
-    scanline: 2.0,
-    speed: 0.8,
-    wildGlitch: false,
-    hueShift: 190,
-    saturation: 0.8,
-    colorPulse: 0.5,
-    playerColor: "#55aaff",
-    gridColor: "#559988"
-  },
-  "vaporwave": {
-    master: 1.3,
-    bloom: 1.8,
-    pixel: 3,
-    glitch: 1.0,
-    glitchSeed: 420,
-    scanline: 1.5,
-    speed: 0.7,
-    wildGlitch: false,
-    hueShift: 280,
-    saturation: 1.4,
-    colorPulse: 1.5,
-    playerColor: "#ff44ff",
-    gridColor: "#55ddff"
-  },
-  "glitchy": {
-    master: 1.5,
-    bloom: 1.5,
-    pixel: 4,
-    glitch: 3.5,
-    glitchSeed: 666,
-    scanline: 0.8,
-    speed: 1.5,
-    wildGlitch: true,
-    hueShift: 0,
-    saturation: 1.1,
-    colorPulse: 2.0,
-    playerColor: "#ff3300",
-    gridColor: "#00ff88"
-  },
-  "minimal": {
-    master: 0.7,
-    bloom: 0.8,
-    pixel: 1,
-    glitch: 0.0,
-    glitchSeed: 1,
-    scanline: 0.0,
-    speed: 1.0,
-    wildGlitch: false,
-    hueShift: 180,
-    saturation: 0.9,
-    colorPulse: 0.0,
-    playerColor: "#ffffff",
-    gridColor: "#4444ff"
-  }
-};
+    /* ------------------ PRESET SYSTEM ------------------ */
+    // Define some built-in presets
+    const builtInPresets = {
+      "default": {
+        master: 1.0,
+        bloom: 1.0,
+        pixel: 1,
+        glitch: 0.0,
+        glitchSeed: 1,
+        scanline: 0.0,
+        speed: 1.0,
+        wildGlitch: false,
+        hueShift: 0,
+        saturation: 1.0,
+        colorPulse: 1.0,
+        playerColor: "#ff00ff",
+        gridColor: "#0088ff"
+      },"retro": {
+        master: 1.2,
+        bloom: 1.0,
+        pixel: 6,
+        glitch: 0.5,
+        glitchSeed: 42,
+        scanline: 3.0,
+        speed: 0.8,
+        wildGlitch: false,
+        hueShift: 250,
+        saturation: 0.9,
+        colorPulse: 1.0,
+        playerColor: "#00ffff",
+        gridColor: "#0055ff"
+      },
+      "cyberpunk": {
+        master: 1.5,
+        bloom: 2.5,
+        pixel: 2,
+        glitch: 2.0,
+        glitchSeed: 137,
+        scanline: 1.0,
+        speed: 1.2,
+        wildGlitch: false,
+        hueShift: 320,
+        saturation: 1.2,
+        colorPulse: 2.0,
+        playerColor: "#ff2288",
+        gridColor: "#00ddff"
+      },
+      "lofi": {
+        master: 0.8,
+        bloom: 0.5,
+        pixel: 8,
+        glitch: 0.3,
+        glitchSeed: 256,
+        scanline: 2.0,
+        speed: 0.8,
+        wildGlitch: false,
+        hueShift: 190,
+        saturation: 0.8,
+        colorPulse: 0.5,
+        playerColor: "#55aaff",
+        gridColor: "#559988"
+      },
+      "vaporwave": {
+        master: 1.3,
+        bloom: 1.8,
+        pixel: 3,
+        glitch: 1.0,
+        glitchSeed: 420,
+        scanline: 1.5,
+        speed: 0.7,
+        wildGlitch: false,
+        hueShift: 280,
+        saturation: 1.4,
+        colorPulse: 1.5,
+        playerColor: "#ff44ff",
+        gridColor: "#55ddff"
+      },
+      "glitchy": {
+        master: 1.5,
+        bloom: 1.5,
+        pixel: 4,
+        glitch: 3.5,
+        glitchSeed: 666,
+        scanline: 0.8,
+        speed: 1.5,
+        wildGlitch: true,
+        hueShift: 0,
+        saturation: 1.1,
+        colorPulse: 2.0,
+        playerColor: "#ff3300",
+        gridColor: "#00ff88"
+      },
+      "minimal": {
+        master: 0.7,
+        bloom: 0.8,
+        pixel: 1,
+        glitch: 0.0,
+        glitchSeed: 1,
+        scanline: 0.0,
+        speed: 1.0,
+        wildGlitch: false,
+        hueShift: 180,
+        saturation: 0.9,
+        colorPulse: 0.0,
+        playerColor: "#ffffff",
+        gridColor: "#4444ff"
+      }
+    };
 
-// Save built-in presets to localStorage if they don't exist
-function initPresets() {
-  const savedPresets = localStorage.getItem('tronEffectsPresets');
-  if (!savedPresets) {
-    localStorage.setItem('tronEffectsPresets', JSON.stringify(builtInPresets));
-  } else {
-    // Add any missing built-in presets
-    const presets = JSON.parse(savedPresets);
-    let updated = false;
-    for (const key in builtInPresets) {
-      if (!presets[key]) {
-        presets[key] = builtInPresets[key];
-        updated = true;
+    // Save built-in presets to localStorage if they don't exist
+    function initPresets() {
+      const savedPresets = localStorage.getItem('tronEffectsPresets');
+      if (!savedPresets) {
+        localStorage.setItem('tronEffectsPresets', JSON.stringify(builtInPresets));
+      } else {
+        // Add any missing built-in presets
+        const presets = JSON.parse(savedPresets);
+        let updated = false;
+        for (const key in builtInPresets) {
+          if (!presets[key]) {
+            presets[key] = builtInPresets[key];
+            updated = true;
+          }
+        }
+        if (updated) {
+          localStorage.setItem('tronEffectsPresets', JSON.stringify(presets));
+        }
+      }
+      
+      // Add stored presets to dropdown
+      const dropdown = document.getElementById('presetDropdown');
+      const presets = JSON.parse(localStorage.getItem('tronEffectsPresets') || '{}');
+      
+      for (const key in presets) {
+        if (key !== 'default' && key !== 'retro' && key !== 'cyberpunk' && 
+            key !== 'lofi' && key !== 'vaporwave' && key !== 'glitchy' && key !== 'minimal') {
+          const option = document.createElement('option');
+          option.value = key;
+          option.text = key;
+          dropdown.add(option);
+        }
       }
     }
-    if (updated) {
-      localStorage.setItem('tronEffectsPresets', JSON.stringify(presets));
+    
+    function loadPreset(presetName) {
+      const presets = JSON.parse(localStorage.getItem('tronEffectsPresets') || '{}');
+      if (presets[presetName]) {
+        Object.assign(effectsConfig, presets[presetName]);
+        updateSliders();
+        updateEffects();
+        updateMaterialColors();
+        updateConfigHash();
+      } else {
+        alert(`Preset "${presetName}" not found!`);
+      }
     }
-  }
-  
-  // Add stored presets to dropdown
-  const dropdown = document.getElementById('presetDropdown');
-  const presets = JSON.parse(localStorage.getItem('tronEffectsPresets') || '{}');
-  
-  for (const key in presets) {
-    if (key !== 'default' && key !== 'retro' && key !== 'cyberpunk' && 
-        key !== 'lofi' && key !== 'vaporwave' && key !== 'glitchy' && key !== 'minimal') {
-      const option = document.createElement('option');
-      option.value = key;
-      option.text = key;
-      dropdown.add(option);
-    }
-  }
-}
 
-function loadPreset(presetName) {
-  const presets = JSON.parse(localStorage.getItem('tronEffectsPresets') || '{}');
-  if (presets[presetName]) {
-    Object.assign(effectsConfig, presets[presetName]);
-    updateSliders();
-    updateEffects();
-    updateMaterialColors();
-    updateConfigHash();
-  } else {
-    alert(`Preset "${presetName}" not found!`);
-  }
-}
+    // Initialize and start the game
+    init();
+  </script>
 
-// Initialize and start the game
-init();
+<a target="_blank" href="https://jam.pieter.com" style="font-family: 'system-ui', sans-serif; position: fixed; bottom: -1px; right: -1px; padding: 7px; font-size: 14px; font-weight: bold; background: #fff; color: #000; text-decoration: none; z-index: 10; border-top-left-radius: 12px; z-index: 10000; border: 1px solid #fff;">🕹️ Vibe Jam 2025</a>
+</body>
+</html>
