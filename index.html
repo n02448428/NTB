@@ -2180,8 +2180,8 @@ function setupPortals() {
   // Create exit portal (always present)
   const exitPortalGroup = new THREE.Group();
   exitPortalGroup.position.set(WORLD_SIZE/2 - 30, SPAWN_POINT_Y, -WORLD_SIZE/2 + 30);
-  exitPortalGroup.rotation.x = 0.35;
-  exitPortalGroup.rotation.y = 0;
+  exitPortalGroup.rotation.x = 0;
+  exitPortalGroup.rotation.y = 0.5;
 
   // Create portal effect
   const exitPortalGeometry = new THREE.TorusGeometry(15, 2, 16, 100);
