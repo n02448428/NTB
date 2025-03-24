@@ -471,7 +471,7 @@
   </div>
   
   <div id="aiCounter">
-    AIs: <span id="aiCount">1</span> | Gen: <span id="aiGeneration">1</span> | Trail: <span id="trailCounter">0</span>
+    AIs: <span id="aiCount">1</span> | FPS: <span id="fpsCounter">0</span> | Trail: <span id="trailCounter">0</span>
   </div>
   
   <div id="gameOver">
@@ -869,6 +869,10 @@ import { GlitchPass } from 'https://cdn.skypack.dev/three@0.134.0/examples/jsm/p
     let isGameOver = false;
 
     let playerName = '';
+
+    let fpsCounter = 0;
+    let fpsTime = 0;
+    let currentFps = 0;
 
     const SPAWN_POINT_X = 0;
     const SPAWN_POINT_Y = 3;
@@ -2386,7 +2390,7 @@ function setupPortals() {
 
     function updateAICounter() {
       document.getElementById('aiCount').textContent = aiBikes.length;
-      document.getElementById('aiGeneration').textContent = aiGeneration;
+      //document.getElementById('aiGeneration').textContent = aiGeneration;
     }
 
     /* ------------------ OBSTACLES & POWERUPS ------------------ */
@@ -3096,6 +3100,15 @@ function updateScore() {
       requestAnimationFrame(animate);
       const delta = clock.getDelta();
       const elapsedTime = clock.getElapsedTime();
+  
+      // FPS calculation
+      fpsCounter++;
+      if (elapsedTime - fpsTime >= 1.0) { // Update FPS display every second
+       currentFps = Math.round(fpsCounter / (elapsedTime - fpsTime));
+       document.getElementById('fpsCounter').textContent = currentFps;
+        fpsCounter = 0;
+       fpsTime = elapsedTime;
+      }
 
       // Update shader uniforms for visual effects
       // Always update time-based effects even when paused
