@@ -15,6 +15,8 @@
     #startButton, #leaderboardButton {margin-top:30px; background:transparent; border:2px solid #0ff; color:#0ff; padding:15px 40px; font-size:24px; cursor:pointer; font-family:'Courier New',monospace; letter-spacing:2px; text-shadow:0 0 5px #0ff; box-shadow:0 0 10px rgba(0,255,255,0.5);}
     #leaderboardButton {margin-top:15px; padding:10px 30px; font-size:18px;}
     #startButton:hover, #leaderboardButton:hover {background:rgba(0,255,255,0.2);}
+    #toggleMusicButton {margin-top: 15px; background: transparent; border: 2px solid #0ff; color: #0ff; padding: 10px 30px; font-size: 18px; cursor: pointer; font-family: 'Courier New', monospace; letter-spacing: 2px; text-shadow: 0 0 5px #0ff; box-shadow: 0 0 10px rgba(0,255,255,0.5);}
+    #toggleMusicButton:hover {background: rgba(0,255,255,0.2);}
     #aiCounter, #playerInfo {position:fixed; color:#0ff; background:rgba(0,0,0,0.7); padding:5px 10px; border-radius:5px; font-size:12px; z-index:100;}
     #aiCounter {top:50px; right:10px;}
     #playerInfo {top:10px; left:50%; transform:translateX(-50%);}
@@ -72,11 +74,18 @@
   </style>
 </head>
 <body>
+
+  <audio id="backgroundMusic" loop preload="auto">
+    <source src="neon-dreams.mp3" type="audio/mpeg">
+    Your browser does not support the audio element.
+  </audio>
+
   <div id="splashScreen">
     <h1 id="splashTitle">NEON TRAILBLAZER</h1>
     <input type="text" id="playerNameInput" placeholder="ENTER YOUR NAME" maxlength="15">
     <button id="startButton">START GAME</button>
     <button id="leaderboardButton">LEADERBOARD</button>
+    <button id="toggleMusicButton">MUSIC: ON</button>
   </div>
   
   <div id="gameContainer"></div>
@@ -694,6 +703,137 @@
         document.body.removeChild(modal);
       });
     }
+
+    /* ------------------ MUSIC ------------------ */
+    let isMusicPlaying = true; // Set default to true for autoplay
+  const musicVolume = 0.3; // Adjust volume level (0.0 to 1.0)
+  
+  function setupMusicControls() {
+    const music = document.getElementById('backgroundMusic');
+    const musicButton = document.getElementById('toggleMusicButton');
+    
+    // Set initial volume
+    music.volume = musicVolume;
+    
+    // Update button text to match default state
+    musicButton.textContent = 'MUSIC: ON';
+    
+    // Attempt to autoplay music (will likely be blocked by browser)
+    attemptAutoplay();
+    
+    // Setup click listeners for all interactive elements to try to start music
+    document.addEventListener('click', function() {
+      if (isMusicPlaying && music.paused) {
+        attemptAutoplay();
+      }
+    }, { once: true });
+    
+    // Use user interaction with game controls to enable music
+    document.addEventListener('keydown', function() {
+      if (isMusicPlaying && music.paused) {
+        attemptAutoplay();
+      }
+    }, { once: true });
+    
+    // Toggle music when button is clicked
+    musicButton.addEventListener('click', function() {
+      if (isMusicPlaying) {
+        music.pause();
+        musicButton.textContent = 'MUSIC: OFF';
+        isMusicPlaying = false;
+      } else {
+        music.play().catch(e => {
+          console.error('Error playing music:', e);
+        });
+        musicButton.textContent = 'MUSIC: ON';
+        isMusicPlaying = true;
+      }
+    });
+    
+    // Also add music toggle to pause screen
+    const resumeButton = document.getElementById('resumeButton');
+    const pauseOverlay = document.getElementById('pauseOverlay');
+    
+    // Create music toggle button for pause screen if it doesn't exist
+    if (!document.getElementById('pauseMusicButton')) {
+      const pauseMusicButton = document.createElement('button');
+      pauseMusicButton.id = 'pauseMusicButton';
+      pauseMusicButton.textContent = 'MUSIC: ON'; // Match default state
+      pauseMusicButton.style.marginTop = '10px';
+      
+      pauseMusicButton.addEventListener('click', function() {
+        if (isMusicPlaying) {
+          music.pause();
+          musicButton.textContent = 'MUSIC: OFF';
+          pauseMusicButton.textContent = 'MUSIC: OFF';
+          isMusicPlaying = false;
+        } else {
+          music.play().catch(e => {
+            console.error('Error playing music:', e);
+          });
+          musicButton.textContent = 'MUSIC: ON';
+          pauseMusicButton.textContent = 'MUSIC: ON';
+          isMusicPlaying = true;
+        }
+      });
+      
+      // Insert before the resume button
+      pauseOverlay.insertBefore(pauseMusicButton, resumeButton);
+    }
+  }
+  
+  function attemptAutoplay() {
+    const music = document.getElementById('backgroundMusic');
+    
+    // Try to play the music
+    music.play().catch(e => {
+      console.log('Autoplay prevented by browser, waiting for user interaction');
+      // We'll try again on first user interaction, already set up the listeners above
+    });
+  }
+  
+  // Handle automatic music stop/play when tab visibility changes
+  document.addEventListener('visibilitychange', function() {
+    const music = document.getElementById('backgroundMusic');
+    
+    if (document.hidden) {
+      // Tab is hidden, store current music state and pause
+      if (!music.paused) {
+        music.pause();
+        music.dataset.wasPlaying = 'true';
+      }
+    } else {
+      // Tab is visible again, resume if it was playing
+      if (music.dataset.wasPlaying === 'true' && isMusicPlaying) {
+        music.play().catch(e => {
+          console.error('Error resuming music:', e);
+        });
+        delete music.dataset.wasPlaying;
+      }
+    }
+  });
+  
+  // Start music when game starts
+  function startGameWithMusic() {
+    const music = document.getElementById('backgroundMusic');
+    if (isMusicPlaying) {
+      music.play().catch(e => {
+        console.log('Music autoplay prevented when starting game');
+      });
+    }
+  }
+  
+  // Modify the startGame function to also start music
+  const originalStartGame = window.startGame || function(){};
+  window.startGame = function() {
+    originalStartGame.apply(this, arguments);
+    startGameWithMusic();
+  };
+  
+  // Add to window load event
+  window.addEventListener('load', function() {
+    setupMusicControls();
+  });
 
     /* ------------------ LEADERBOARD SYSTEM ------------------ */
     function showLeaderboard() {
@@ -2683,6 +2823,8 @@ if (metaversePortalBox) {
     }
   });
 }
+
+
 
     /* ------------------ INITIALIZE ------------------ */
     function init() {
