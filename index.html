@@ -1670,81 +1670,143 @@ metaversePortalBox = new THREE.Box3().setFromObject(metaversePortalGroup);
     }
 
     function createObstacle() {
-      const types = [
-        { geo: new THREE.BoxGeometry(10, 15, 10), color: 0xff5500 },
-        { geo: new THREE.CylinderGeometry(5, 5, 20, 8), color: 0x00ff88 },
-        { geo: new THREE.TetrahedronGeometry(10), color: 0xffff00 }
-      ];
-      const type = types[Math.floor(Math.random() * types.length)];
-      const material = new THREE.MeshPhongMaterial({
-        color: type.color,
-        emissive: type.color,
-        emissiveIntensity: 0.3 + (effectsConfig.master * 0.2)
-      });
-      const obstacle = new THREE.Mesh(type.geo, material);
-
-      let validPosition = false;
-      while (!validPosition) {
-        const x = (Math.random() - 0.5) * (WORLD_SIZE - 40);
-        const z = (Math.random() - 0.5) * (WORLD_SIZE - 40);
-        const distToPlayer = new THREE.Vector3(x, 0, z).distanceTo(playerBike.position);
-        let tooCloseToAI = false;
-        
-        for (let ai of aiBikes) {
-          if (new THREE.Vector3(x, 0, z).distanceTo(ai.position) < 50) {
-            tooCloseToAI = true;
-            break;
-          }
-        }
-        
-        if (distToPlayer > 50 && !tooCloseToAI) {
-          obstacle.position.set(x, 10, z);
-          validPosition = true;
-        }
-      }
-      scene.add(obstacle);
-      obstacles.push(obstacle);
-    }
-
-    function createPowerup() {
-      const geometry = new THREE.SphereGeometry(3, 16, 16);
-      const material = new THREE.MeshPhongMaterial({
-        color: 0xffffff,
-        emissive: 0xffffff,
-        emissiveIntensity: 0.8 + (effectsConfig.master * 0.4)
-      });
-      const powerup = new THREE.Mesh(geometry, material);
-
-      let validPosition = false;
-      while (!validPosition) {
-        const x = (Math.random() - 0.5) * (WORLD_SIZE - 40);
-        const z = (Math.random() - 0.5) * (WORLD_SIZE - 40);
-        let tooClose = false;
-        for (let obs of obstacles) {
-          if (new THREE.Vector3(x, 0, z).distanceTo(obs.position) < 15) {
-            tooClose = true;
-            break;
-          }
-        }
-        if (!tooClose) {
-          powerup.position.set(x, 3, z);
-          validPosition = true;
-        }
-      }
-      
-      // Add pulsing light to powerups
-      const powerupLight = new THREE.PointLight(
-        0xffffff, 
-        0.7 * (1 + effectsConfig.master), 
-        15 * (1 + effectsConfig.master)
+  // Base obstacle types with their geometry types
+  const types = [
+    { geoType: "box", color: 0xff5500 },
+    { geoType: "cylinder", color: 0x00ff88 },
+    { geoType: "tetrahedron", color: 0xffff00 }
+  ];
+  
+  // Select a random type
+  const type = types[Math.floor(Math.random() * types.length)];
+  
+  // Generate a random size multiplier between 1 and 5
+  const sizeMultiplier = Math.random() * 5; // 1 to 5
+  
+  // Create geometry based on type and size
+  let geometry;
+  switch(type.geoType) {
+    case "box":
+      // BoxGeometry(width, height, depth)
+      geometry = new THREE.BoxGeometry(
+        10 * sizeMultiplier, 
+        15 * sizeMultiplier, 
+        10 * sizeMultiplier
       );
-      powerupLight.position.copy(powerup.position);
-      scene.add(powerupLight);
-      
-      powerup.userData = { light: powerupLight };
-      scene.add(powerup);
-      powerups.push(powerup);
+      break;
+    case "cylinder":
+      // CylinderGeometry(radiusTop, radiusBottom, height, radialSegments)
+      const radius = 5 * sizeMultiplier;
+      geometry = new THREE.CylinderGeometry(
+        radius, 
+        radius, 
+        20 * sizeMultiplier, 
+        8
+      );
+      break;
+    case "tetrahedron":
+      // TetrahedronGeometry(radius, detail)
+      geometry = new THREE.TetrahedronGeometry(10 * sizeMultiplier);
+      break;
+  }
+  
+  // Create material and mesh
+  const material = new THREE.MeshPhongMaterial({
+    color: type.color,
+    emissive: type.color,
+    emissiveIntensity: 0.3 + (effectsConfig.master * 0.2)
+  });
+  
+  const obstacle = new THREE.Mesh(geometry, material);
+  
+  // Store the size multiplier for collision detection adjustments
+  obstacle.userData = { sizeMultiplier: sizeMultiplier };
+
+  // Find valid position (same as before, but with adjusted distance checks)
+  let validPosition = false;
+  while (!validPosition) {
+    const x = (Math.random() - 0.5) * (WORLD_SIZE - 40);
+    const z = (Math.random() - 0.5) * (WORLD_SIZE - 40);
+    const distToPlayer = new THREE.Vector3(x, 0, z).distanceTo(playerBike.position);
+    let tooCloseToAI = false;
+    
+    for (let ai of aiBikes) {
+      // Adjust minimum distance based on obstacle size
+      if (new THREE.Vector3(x, 0, z).distanceTo(ai.position) < 50 + (10 * sizeMultiplier)) {
+        tooCloseToAI = true;
+        break;
+      }
     }
+    
+    // Adjust minimum distance based on obstacle size
+    if (distToPlayer > (50 + (10 * sizeMultiplier)) && !tooCloseToAI) {
+      // Properly position obstacles to stand firmly on the floor
+      // For boxes and tetrahedrons, align bottom with floor
+      if (type.geoType === "box") {
+        obstacle.position.set(x, (15 * sizeMultiplier) / 2, z);
+      } else if (type.geoType === "tetrahedron") {
+        // Tetrahedron origin is at center, needs to be raised to stand on floor
+        obstacle.position.set(x, (10 * sizeMultiplier) / 2, z);
+      } else if (type.geoType === "cylinder") {
+        // Cylinder height is along y-axis, origin at center
+        obstacle.position.set(x, (20 * sizeMultiplier) / 2, z);
+      }
+      validPosition = true;
+    }
+  }
+  
+  scene.add(obstacle);
+  obstacles.push(obstacle);
+}
+
+function createPowerup() {
+  const geometry = new THREE.SphereGeometry(3, 16, 16);
+  const material = new THREE.MeshPhongMaterial({
+    color: 0xffffff,
+    emissive: 0xffffff,
+    emissiveIntensity: 0.8 + (effectsConfig.master * 0.4)
+  });
+  const powerup = new THREE.Mesh(geometry, material);
+
+  let validPosition = false;
+  while (!validPosition) {
+    const x = (Math.random() - 0.5) * (WORLD_SIZE - 40);
+    const z = (Math.random() - 0.5) * (WORLD_SIZE - 40);
+    let tooClose = false;
+    
+    for (let obs of obstacles) {
+      // Get size multiplier from obstacle, default to 1 if not present
+      const sizeMultiplier = obs.userData && obs.userData.sizeMultiplier ? 
+                             obs.userData.sizeMultiplier : 1;
+      
+      // Scale minimum distance based on obstacle size
+      const minDistance = 15 * sizeMultiplier;
+      
+      if (new THREE.Vector3(x, 0, z).distanceTo(obs.position) < minDistance) {
+        tooClose = true;
+        break;
+      }
+    }
+    
+    if (!tooClose) {
+      powerup.position.set(x, 3, z);
+      validPosition = true;
+    }
+  }
+  
+  // Add pulsing light to powerups
+  const powerupLight = new THREE.PointLight(
+    0xffffff, 
+    0.7 * (1 + effectsConfig.master), 
+    15 * (1 + effectsConfig.master)
+  );
+  powerupLight.position.copy(powerup.position);
+  scene.add(powerupLight);
+  
+  powerup.userData = { light: powerupLight };
+  scene.add(powerup);
+  powerups.push(powerup);
+}
 
     /* ------------------ TRAILS ------------------ */
     function addPlayerTrail() {
@@ -1798,108 +1860,119 @@ metaversePortalBox = new THREE.Box3().setFromObject(metaversePortalGroup);
 
     /* ------------------ AI LOGIC ------------------ */
     function evaluateDirection(aiBike, direction) {
-      const lookaheadDistance = 30 * aiBike.userData.characteristics.avoidDistance / knowledgeBase.avoidDistance;
-      const futurePosition = aiBike.position.clone().add(direction.clone().multiplyScalar(lookaheadDistance));
-      let score = 100 * aiBike.userData.characteristics.riskTolerance;
+  const lookaheadDistance = 30 * aiBike.userData.characteristics.avoidDistance / knowledgeBase.avoidDistance;
+  const futurePosition = aiBike.position.clone().add(direction.clone().multiplyScalar(lookaheadDistance));
+  let score = 100 * aiBike.userData.characteristics.riskTolerance;
 
-      // Store distances for learning
-      const distances = {
-        walls: Infinity,
-        obstacles: Infinity,
-        playerTrail: Infinity,
-        aiTrails: Infinity,
-        closestPowerup: Infinity
-      };
+  // Store distances for learning
+  const distances = {
+    walls: Infinity,
+    obstacles: Infinity,
+    playerTrail: Infinity,
+    aiTrails: Infinity,
+    closestPowerup: Infinity
+  };
 
-      // Penalty for nearing boundaries
-      const distToBoundaryX = WORLD_SIZE/2 - Math.abs(futurePosition.x);
-      const distToBoundaryZ = WORLD_SIZE/2 - Math.abs(futurePosition.z);
-      const distToBoundary = Math.min(distToBoundaryX, distToBoundaryZ);
-      distances.walls = distToBoundary;
-      
-      if (distToBoundary < 20) {
-        score -= (1000 * knowledgeBase.avoidWallWeight * (20 - distToBoundary) / 20);
-      }
+  // Penalty for nearing boundaries
+  const distToBoundaryX = WORLD_SIZE/2 - Math.abs(futurePosition.x);
+  const distToBoundaryZ = WORLD_SIZE/2 - Math.abs(futurePosition.z);
+  const distToBoundary = Math.min(distToBoundaryX, distToBoundaryZ);
+  distances.walls = distToBoundary;
+  
+  if (distToBoundary < 20) {
+    score -= (1000 * knowledgeBase.avoidWallWeight * (20 - distToBoundary) / 20);
+  }
 
-      // Obstacle collisions
-      for (let obstacle of obstacles) {
-        const distance = futurePosition.distanceTo(obstacle.position);
-        distances.obstacles = Math.min(distances.obstacles, distance);
-        
-        const collisionThreshold = 15 * aiBike.userData.characteristics.riskTolerance;
-        if (distance < collisionThreshold) {
-          score -= 500 * (collisionThreshold - distance) / collisionThreshold;
-        }
-      }
-
-      // Player trail
-      for (let segment of playerTrail) {
-        const distance = futurePosition.distanceTo(segment.mesh.position);
-        distances.playerTrail = Math.min(distances.playerTrail, distance);
-        if (distance < 10) score -= 400;
-      }
-
-      // All AI trails including own trail
-      for (let otherAI of aiBikes) {
-        for (let i = 0; i < otherAI.userData.trail.length; i++) {
-          // Skip the most recent segments of own trail
-          if (otherAI === aiBike && i >= otherAI.userData.trail.length - 3) continue;
-          
-          const segment = otherAI.userData.trail[i];
-          const distance = futurePosition.distanceTo(segment.mesh.position);
-          distances.aiTrails = Math.min(distances.aiTrails, distance);
-          
-          if (distance < 10) {
-            // Avoiding own trail is more important than other AI trails
-            const weight = (otherAI === aiBike) ? 1.2 : 0.8;
-            score -= 400 * weight;
-          }
-        }
-      }
-
-      // Seek powerups
-      for (let powerup of powerups) {
-        const distance = futurePosition.distanceTo(powerup.position);
-        distances.closestPowerup = Math.min(distances.closestPowerup, distance);
-        
-        if (distance < 50) {
-          // Higher generation AIs are better at valuing powerups
-          const powerupWeight = aiBike.userData.characteristics.powerupWeight * 
-                               (1 + (aiBike.userData.generation - 1) * 0.1);
-          score += powerupWeight * (1 - distance / 50);
-        }
-      }
-
-      // Move toward player (more aggressive at higher generations)
-      if (aiBike.userData.generation > 2) {
-        const distToPlayer = futurePosition.distanceTo(playerBike.position);
-        // Target the player but not too close (to avoid collision with player trail)
-        const optimalDistance = 50;
-        const targetScore = 30 * (aiBike.userData.generation - 2);
-        
-        if (distToPlayer > optimalDistance) {
-          // Move closer to player
-          score += targetScore * (1 - Math.min(1, (distToPlayer - optimalDistance) / 100));
-        } else if (distToPlayer < 20) {
-          // Too close to player, back off a bit to avoid collision
-          score -= 100 * (1 - distToPlayer / 20);
-        }
-      }
-
-      // Add some randomness to encourage exploration
-      score += (Math.random() - 0.5) * 20 * aiBike.userData.characteristics.turnRandomness;
-      
-      // Bias toward preferred turn direction
-      if (aiBike.userData.characteristics.preferredTurn === 'left' && 
-          direction.equals(new THREE.Vector3(-aiBike.userData.direction.z, 0, aiBike.userData.direction.x))) {
-        score += 10;
-      } else if (aiBike.userData.characteristics.preferredTurn === 'right' && 
-                direction.equals(new THREE.Vector3(aiBike.userData.direction.z, 0, -aiBike.userData.direction.x))) {
-        score += 10;
-      }
-      
-      return { score, distances };
+  // Obstacle collisions - updated for variable sizes
+  for (let obstacle of obstacles) {
+    // Get size multiplier from obstacle, default to 1 if not present
+    const sizeMultiplier = obstacle.userData && obstacle.userData.sizeMultiplier ? 
+                           obstacle.userData.sizeMultiplier : 1;
+    
+    const distance = futurePosition.distanceTo(obstacle.position);
+    distances.obstacles = Math.min(distances.obstacles, distance);
+    
+    // Adjust collision threshold based on obstacle size
+    const collisionThreshold = 15 * aiBike.userData.characteristics.riskTolerance * sizeMultiplier;
+    
+    // Higher generation AIs are better at avoiding larger obstacles
+    const sizeAwareness = 1 + ((aiBike.userData.generation - 1) * 0.1);
+    
+    if (distance < collisionThreshold) {
+      // Penalty increases with obstacle size and decreases with generation
+      const sizePenalty = sizeMultiplier * 500 / sizeAwareness;
+      score -= sizePenalty * (collisionThreshold - distance) / collisionThreshold;
     }
+  }
+
+  // Player trail
+  for (let segment of playerTrail) {
+    const distance = futurePosition.distanceTo(segment.mesh.position);
+    distances.playerTrail = Math.min(distances.playerTrail, distance);
+    if (distance < 10) score -= 400;
+  }
+
+  // All AI trails including own trail
+  for (let otherAI of aiBikes) {
+    for (let i = 0; i < otherAI.userData.trail.length; i++) {
+      // Skip the most recent segments of own trail
+      if (otherAI === aiBike && i >= otherAI.userData.trail.length - 3) continue;
+      
+      const segment = otherAI.userData.trail[i];
+      const distance = futurePosition.distanceTo(segment.mesh.position);
+      distances.aiTrails = Math.min(distances.aiTrails, distance);
+      
+      if (distance < 10) {
+        // Avoiding own trail is more important than other AI trails
+        const weight = (otherAI === aiBike) ? 1.2 : 0.8;
+        score -= 400 * weight;
+      }
+    }
+  }
+
+  // Seek powerups
+  for (let powerup of powerups) {
+    const distance = futurePosition.distanceTo(powerup.position);
+    distances.closestPowerup = Math.min(distances.closestPowerup, distance);
+    
+    if (distance < 50) {
+      // Higher generation AIs are better at valuing powerups
+      const powerupWeight = aiBike.userData.characteristics.powerupWeight * 
+                           (1 + (aiBike.userData.generation - 1) * 0.1);
+      score += powerupWeight * (1 - distance / 50);
+    }
+  }
+
+  // Move toward player (more aggressive at higher generations)
+  if (aiBike.userData.generation > 2) {
+    const distToPlayer = futurePosition.distanceTo(playerBike.position);
+    // Target the player but not too close (to avoid collision with player trail)
+    const optimalDistance = 50;
+    const targetScore = 30 * (aiBike.userData.generation - 2);
+    
+    if (distToPlayer > optimalDistance) {
+      // Move closer to player
+      score += targetScore * (1 - Math.min(1, (distToPlayer - optimalDistance) / 100));
+    } else if (distToPlayer < 20) {
+      // Too close to player, back off a bit to avoid collision
+      score -= 100 * (1 - distToPlayer / 20);
+    }
+  }
+
+  // Add some randomness to encourage exploration
+  score += (Math.random() - 0.5) * 20 * aiBike.userData.characteristics.turnRandomness;
+  
+  // Bias toward preferred turn direction
+  if (aiBike.userData.characteristics.preferredTurn === 'left' && 
+      direction.equals(new THREE.Vector3(-aiBike.userData.direction.z, 0, aiBike.userData.direction.x))) {
+    score += 10;
+  } else if (aiBike.userData.characteristics.preferredTurn === 'right' && 
+             direction.equals(new THREE.Vector3(aiBike.userData.direction.z, 0, -aiBike.userData.direction.x))) {
+    score += 10;
+  }
+  
+  return { score, distances };
+}
 
     function updateAIDirection(aiBike) {
       const now = clock.getElapsedTime();
@@ -2034,89 +2107,104 @@ metaversePortalBox = new THREE.Box3().setFromObject(metaversePortalGroup);
     }
 
     /* ------------------ COLLISION CHECKS ------------------ */
-    function checkPlayerCollisions() {
-      // Boundaries
-      if (
-        Math.abs(playerBike.position.x) > WORLD_SIZE/2 - 5 ||
-        Math.abs(playerBike.position.z) > WORLD_SIZE/2 - 5
-      ) return { collision: true, reason: "wall" };
-      
-      // Obstacles
-      for (let obstacle of obstacles) {
-        const distance = playerBike.position.distanceTo(obstacle.position);
-        if (distance < 10) return { collision: true, reason: "obstacle" };
-      }
-      
-      // Own trail
-      for (let i = 0; i < playerTrail.length - 5; i++) {
-        const segment = playerTrail[i];
-        const distance = playerBike.position.distanceTo(segment.mesh.position);
-        if (distance < 3) return { collision: true, reason: "own trail" };
-      }
-      
-      // AI trails
-      for (let aiBike of aiBikes) {
-        // AI bike itself
-        if (playerBike.position.distanceTo(aiBike.position) < 5) {
-          return { collision: true, reason: "AI bike" };
-        }
-        
-        // AI trails
-        for (let segment of aiBike.userData.trail) {
-          const distance = playerBike.position.distanceTo(segment.mesh.position);
-          if (distance < 3) return { collision: true, reason: "AI trail" };
-        }
-      }
-
-      return { collision: false };
+    /* ------------------ COLLISION CHECKS ------------------ */
+function checkPlayerCollisions() {
+  // Boundaries
+  if (
+    Math.abs(playerBike.position.x) > WORLD_SIZE/2 - 5 ||
+    Math.abs(playerBike.position.z) > WORLD_SIZE/2 - 5
+  ) return { collision: true, reason: "wall" };
+  
+  // Obstacles - updated for variable sizes
+  for (let obstacle of obstacles) {
+    // Get the size multiplier if it exists, otherwise default to 1
+    const sizeMultiplier = obstacle.userData && obstacle.userData.sizeMultiplier ? 
+                          obstacle.userData.sizeMultiplier : 1;
+    
+    // Scale collision distance based on obstacle size
+    const collisionDistance = 10 * sizeMultiplier;
+    
+    const distance = playerBike.position.distanceTo(obstacle.position);
+    if (distance < collisionDistance) return { collision: true, reason: "obstacle" };
+  }
+  
+  // Own trail
+  for (let i = 0; i < playerTrail.length - 5; i++) {
+    const segment = playerTrail[i];
+    const distance = playerBike.position.distanceTo(segment.mesh.position);
+    if (distance < 3) return { collision: true, reason: "own trail" };
+  }
+  
+  // AI trails
+  for (let aiBike of aiBikes) {
+    // AI bike itself
+    if (playerBike.position.distanceTo(aiBike.position) < 5) {
+      return { collision: true, reason: "AI bike" };
     }
-
-    function checkAICollisions(aiBike) {
-      // Boundaries
-      if (
-        Math.abs(aiBike.position.x) > WORLD_SIZE/2 - 5 ||
-        Math.abs(aiBike.position.z) > WORLD_SIZE/2 - 5
-      ) return { collision: true, reason: "wall" };
-      
-      // Obstacles
-      for (let obstacle of obstacles) {
-        const distance = aiBike.position.distanceTo(obstacle.position);
-        if (distance < 10) return { collision: true, reason: "obstacle" };
-      }
-      
-      // Own trail
-      for (let i = 0; i < aiBike.userData.trail.length - 5; i++) {
-        const segment = aiBike.userData.trail[i];
-        const distance = aiBike.position.distanceTo(segment.mesh.position);
-        if (distance < 3) return { collision: true, reason: "own trail" };
-      }
-      
-      // Player trail and bike
-      for (let segment of playerTrail) {
-        const distance = aiBike.position.distanceTo(segment.mesh.position);
-        if (distance < 3) return { collision: true, reason: "player trail" };
-      }
-      
-      if (aiBike.position.distanceTo(playerBike.position) < 5) {
-        return { collision: true, reason: "player bike" };
-      }
-      
-      // Other AI trails and bikes
-      for (let otherAI of aiBikes) {
-        if (otherAI === aiBike) continue;
-        
-        if (aiBike.position.distanceTo(otherAI.position) < 5) {
-          return { collision: true, reason: "other AI bike" };
-        }
-        
-        for (let segment of otherAI.userData.trail) {
-          const distance = aiBike.position.distanceTo(segment.mesh.position);
-          if (distance < 3) return { collision: true, reason: "other AI trail" };
-        }
-      }
-
-      return { collision: false };
+    
+    // AI trails
+    for (let segment of aiBike.userData.trail) {
+      const distance = playerBike.position.distanceTo(segment.mesh.position);
+      if (distance < 3) return { collision: true, reason: "AI trail" };
     }
+  }
+
+  return { collision: false };
+}
+
+function checkAICollisions(aiBike) {
+  // Boundaries
+  if (
+    Math.abs(aiBike.position.x) > WORLD_SIZE/2 - 5 ||
+    Math.abs(aiBike.position.z) > WORLD_SIZE/2 - 5
+  ) return { collision: true, reason: "wall" };
+  
+  // Obstacles - updated for variable sizes
+  for (let obstacle of obstacles) {
+    // Get the size multiplier if it exists, otherwise default to 1
+    const sizeMultiplier = obstacle.userData && obstacle.userData.sizeMultiplier ? 
+                          obstacle.userData.sizeMultiplier : 1;
+    
+    // Scale collision distance based on obstacle size
+    const collisionDistance = 10 * sizeMultiplier;
+    
+    const distance = aiBike.position.distanceTo(obstacle.position);
+    if (distance < collisionDistance) return { collision: true, reason: "obstacle" };
+  }
+  
+  // Own trail
+  for (let i = 0; i < aiBike.userData.trail.length - 5; i++) {
+    const segment = aiBike.userData.trail[i];
+    const distance = aiBike.position.distanceTo(segment.mesh.position);
+    if (distance < 3) return { collision: true, reason: "own trail" };
+  }
+  
+  // Player trail and bike
+  for (let segment of playerTrail) {
+    const distance = aiBike.position.distanceTo(segment.mesh.position);
+    if (distance < 3) return { collision: true, reason: "player trail" };
+  }
+  
+  if (aiBike.position.distanceTo(playerBike.position) < 5) {
+    return { collision: true, reason: "player bike" };
+  }
+  
+  // Other AI trails and bikes
+  for (let otherAI of aiBikes) {
+    if (otherAI === aiBike) continue;
+    
+    if (aiBike.position.distanceTo(otherAI.position) < 5) {
+      return { collision: true, reason: "other AI bike" };
+    }
+    
+    for (let segment of otherAI.userData.trail) {
+      const distance = aiBike.position.distanceTo(segment.mesh.position);
+      if (distance < 3) return { collision: true, reason: "other AI trail" };
+    }
+  }
+
+  return { collision: false };
+}
 
     /* ------------------ POWERUPS ------------------ */
     function checkPowerups() {
@@ -2350,7 +2438,7 @@ if (metaversePortalBox) {
 
       createPlayerBike();
       createAIBike();
-      for (let i = 0; i < 100; i++) createObstacle();
+      for (let i = 0; i < 80; i++) createObstacle();
       for (let i = 0; i < 40; i++) createPowerup();
       
       startAISpawnTimer();
@@ -2673,7 +2761,7 @@ if (metaversePortalBox) {
       createSponsorMessages();
       createPlayerBike();
       createAIBike();
-      for (let i = 0; i < 100; i++) createObstacle();
+      for (let i = 0; i < 80; i++) createObstacle();
       for (let i = 0; i < 40; i++) createPowerup();
 
       setupPortals();
