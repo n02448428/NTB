@@ -1,0 +1,7 @@
+{
+  "name": "ntb",
+  "version": "1.0.0",
+  "dependencies": {
+    "redis": "^4.6.7"
+  }
+}
