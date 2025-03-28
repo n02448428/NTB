@@ -1656,42 +1656,37 @@
       });
     }
 
-    function addSwipeControls() {
-  const gameContainer = document.getElementById('gameContainer');
-  let touchStartX = 0;
-  let touchStartY = 0;
+    // Add this as a completely new function in your code
+function addSwipeControls() {
+  const touchZone = document.getElementById('touchControls');
+  let startX = 0;
+  let startTime = 0;
   
-  // Track touch start position
-  gameContainer.addEventListener('touchstart', function(e) {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-  });
+  touchZone.addEventListener('touchstart', function(event) {
+    // Just record start position and time, don't prevent default
+    startX = event.touches[0].clientX;
+    startTime = Date.now();
+  }, {passive: true});
   
-  // Detect swipe on touch end
-  gameContainer.addEventListener('touchend', function(e) {
+  touchZone.addEventListener('touchend', function(event) {
+    // Don't interfere with game state checks
     if (STATE.isPaused || STATE.isGameOver || !STATE.gameStarted) return;
     
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
+    const endX = event.changedTouches[0].clientX;
+    const elapsedTime = Date.now() - startTime;
+    const distX = endX - startX;
     
-    // Calculate swipe direction
-    const deltaX = touchEndX - touchStartX;
-    const deltaY = touchEndY - touchStartY;
-    
-    // Only register as a swipe if the horizontal movement is greater than vertical
-    // and greater than a minimum threshold (to distinguish from taps)
-    const minSwipeDistance = 30; // Minimum pixels to count as a swipe
-    
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-      if (deltaX > 0) {
-        // Swipe right - turn right
+    // Only count as swipe if moved more than 50px horizontally and took less than 300ms
+    if (Math.abs(distX) > 50 && elapsedTime < 300) {
+      if (distX > 0) {
+        // Swipe right
         PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
       } else {
-        // Swipe left - turn left
+        // Swipe left
         PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
       }
     }
-  });
+  }, {passive: true});
 }
 
     /* ------------------ ORIENTATION HANDLING ------------------ */
@@ -2698,7 +2693,6 @@
       document.getElementById('aiCount').textContent = aiBikes.length;
     }
 
-    /* ------------------ COLLISION CHECKS ------------------ */
     /* ------------------ COLLISION CHECKS ------------------ */
     function checkPlayerCollisions() {
       // Boundaries
