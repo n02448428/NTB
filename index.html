@@ -1622,39 +1622,63 @@
 
     /* ------------------ TOUCH CONTROLS ------------------ */
     function setupTouchControls() {
-      const leftZone = document.getElementById('leftTouchZone');
-      const rightZone = document.getElementById('rightTouchZone');
-
-      leftZone.addEventListener('touchstart', function (e) {
-        e.preventDefault();
-        if (!isPaused && !isGameOver && gameStarted) {
-          playerDirection.set(playerDirection.z, 0, -playerDirection.x);
-        }
-      });
-
-      rightZone.addEventListener('touchstart', function (e) {
-        e.preventDefault();
-        if (!isPaused && !isGameOver && gameStarted) {
-          playerDirection.set(-playerDirection.z, 0, playerDirection.x);
-        }
-      });
-
-      document.getElementById('pauseButton').addEventListener('touchstart', function (e) {
-        e.preventDefault();
-        togglePause();
-      });
-
-      document.getElementById('resumeButton').addEventListener('touchstart', function (e) {
-        e.preventDefault();
-        if (isPaused) togglePause();
-      });
-
-      document.getElementById('toggleEffectsButton').addEventListener('touchstart', function (e) {
-        e.preventDefault();
-        const panel = document.getElementById('effectsPanel');
-        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
-      });
+  const leftZone = document.getElementById('leftTouchZone');
+  const rightZone = document.getElementById('rightTouchZone');
+  
+  // Variables to track touch start positions for swipe detection
+  let touchStartX = 0;
+  let touchStartY = 0;
+  
+  // Add existing tap controls
+  leftZone.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    if (!STATE.isPaused && !STATE.isGameOver && STATE.gameStarted) {
+      PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
     }
+  });
+
+  rightZone.addEventListener('touchstart', function(e) {
+    e.preventDefault();
+    if (!STATE.isPaused && !STATE.isGameOver && STATE.gameStarted) {
+      PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+    }
+  });
+  
+  // Add swipe controls to the entire game container
+  const gameContainer = document.getElementById('gameContainer');
+  
+  // Track touch start position
+  gameContainer.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  });
+  
+  // Detect swipe on touch end
+  gameContainer.addEventListener('touchend', function(e) {
+    if (STATE.isPaused || STATE.isGameOver || !STATE.gameStarted) return;
+    
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    
+    // Calculate swipe direction
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    
+    // Only register as a swipe if the horizontal movement is greater than vertical
+    // and greater than a minimum threshold (to distinguish from taps)
+    const minSwipeDistance = 30; // Minimum pixels to count as a swipe
+    
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+      if (deltaX > 0) {
+        // Swipe right - turn right
+        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+      } else {
+        // Swipe left - turn left
+        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+      }
+    }
+  });
+}
 
     /* ------------------ ORIENTATION HANDLING ------------------ */
     function updateCameraForOrientation() {
