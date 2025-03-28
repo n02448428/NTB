@@ -1656,6 +1656,44 @@
       });
     }
 
+    function addSwipeControls() {
+  const gameContainer = document.getElementById('gameContainer');
+  let touchStartX = 0;
+  let touchStartY = 0;
+  
+  // Track touch start position
+  gameContainer.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+  });
+  
+  // Detect swipe on touch end
+  gameContainer.addEventListener('touchend', function(e) {
+    if (STATE.isPaused || STATE.isGameOver || !STATE.gameStarted) return;
+    
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    
+    // Calculate swipe direction
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    
+    // Only register as a swipe if the horizontal movement is greater than vertical
+    // and greater than a minimum threshold (to distinguish from taps)
+    const minSwipeDistance = 30; // Minimum pixels to count as a swipe
+    
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+      if (deltaX > 0) {
+        // Swipe right - turn right
+        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+      } else {
+        // Swipe left - turn left
+        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+      }
+    }
+  });
+}
+
     /* ------------------ ORIENTATION HANDLING ------------------ */
     function updateCameraForOrientation() {
       if (!camera || !playerBike) return;
@@ -4100,6 +4138,7 @@
       updateCameraForOrientation();
       setupUIControls();
       setupTouchControls();
+      addSwipeControls();
       initPresets();
 
       // Event listeners
