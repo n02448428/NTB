@@ -36,7 +36,7 @@ function init() {
     createAIBike();
     
     // Create initial game objects
-    for (let i = 0; i < 100; i++) createObstacle();
+    for (let i = 0; i < 150; i++) createObstacle();
     for (let i = 0; i < 30; i++) createPowerup();
     
     // Setup portals
