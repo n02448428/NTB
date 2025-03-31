@@ -600,3 +600,40 @@
 #toggleEffectsButton.notification-hidden::after {
   display: none;
 }
+
+/* Ghost Frame Button Style */
+#ghostWireframeButton {
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid #ff00ff;
+  color: #ff00ff;
+  padding: 10px 20px;
+  font-size: 16px;
+  margin-top: 15px;
+  font-family: 'Courier New', monospace;
+  text-shadow: 0 0 5px #ff00ff;
+  box-shadow: 0 0 10px rgba(255, 0, 255, 0.5);
+  transition: all 0.2s ease;
+}
+
+#ghostWireframeButton:hover {
+  background: rgba(255, 0, 255, 0.2);
+  box-shadow: 0 0 15px rgba(255, 0, 255, 0.8);
+}
+
+/* Tooltip for ghost frames button */
+#ghostWireframeButton:hover::before {
+  content: "See previous game obstacles";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(0, 0, 0, 0.8);
+  color: #ff00ff;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 12px;
+  margin-top: 5px;
+  white-space: nowrap;
+  pointer-events: none;
+  z-index: 1000;
+}
