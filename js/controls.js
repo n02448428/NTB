@@ -43,74 +43,74 @@ function setupControls() {
   }
   
   function setupTouchControls() {
-    const gameContainer = document.getElementById('gameContainer');
-    let touchStartX = 0;
-    let touchStartY = 0;
-    let wasSwiped = false; // Flag to track if a swipe was detected
-  
-    gameContainer.addEventListener('touchstart', function(e) {
-      touchStartX = e.touches[0].clientX;
-      touchStartY = e.touches[0].clientY;
-      wasSwiped = false; // Reset swipe flag on new touch
-      console.log('Touch start:', touchStartX, touchStartY);
+  const gameContainer = document.getElementById('gameContainer');
+  let touchStartX = 0;
+  let touchStartY = 0;
+  let wasSwiped = false; // Flag to track if a swipe was detected
+
+  gameContainer.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    wasSwiped = false; // Reset swipe flag on new touch
+    console.log('Touch start:', touchStartX, touchStartY);
+  });
+
+  gameContainer.addEventListener('touchmove', function(e) {
+    // This can help track continuous touch movement
+    console.log('Touch move detected');
+  });
+
+  gameContainer.addEventListener('touchend', function(e) {
+    console.log('Game state:', {
+      isPaused: CONFIG.STATE.isPaused,
+      isGameOver: CONFIG.STATE.isGameOver,
+      gameStarted: CONFIG.STATE.gameStarted
     });
-  
-    gameContainer.addEventListener('touchmove', function(e) {
-      // This can help track continuous touch movement
-      console.log('Touch move detected');
+
+    if (CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver || !CONFIG.STATE.gameStarted) {
+      console.log('Touch end ignored due to game state');
+      return;
+    }
+    
+    const touchEndX = e.changedTouches[0].clientX;
+    const touchEndY = e.changedTouches[0].clientY;
+    
+    // Calculate swipe direction
+    const deltaX = touchEndX - touchStartX;
+    const deltaY = touchEndY - touchStartY;
+    
+    console.log('Touch end:', {
+      startX: touchStartX,
+      startY: touchStartY,
+      endX: touchEndX,
+      endY: touchEndY,
+      deltaX: deltaX,
+      deltaY: deltaY
     });
-  
-    gameContainer.addEventListener('touchend', function(e) {
-      console.log('Game state:', {
-        isPaused: CONFIG.STATE.isPaused,
-        isGameOver: CONFIG.STATE.isGameOver,
-        gameStarted: CONFIG.STATE.gameStarted
-      });
-  
-      if (CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver || !CONFIG.STATE.gameStarted) {
-        console.log('Touch end ignored due to game state');
-        return;
-      }
+    
+    // Minimum pixels to count as a swipe
+    const minSwipeDistance = 30;
+    
+    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+      wasSwiped = true; // Mark that we detected a swipe
+      console.log('Swipe detected:', deltaX > 0 ? 'Right' : 'Left');
       
-      const touchEndX = e.changedTouches[0].clientX;
-      const touchEndY = e.changedTouches[0].clientY;
-      
-      // Calculate swipe direction
-      const deltaX = touchEndX - touchStartX;
-      const deltaY = touchEndY - touchStartY;
-      
-      console.log('Touch end:', {
-        startX: touchStartX,
-        startY: touchStartY,
-        endX: touchEndX,
-        endY: touchEndY,
-        deltaX: deltaX,
-        deltaY: deltaY
-      });
-      
-      // Minimum pixels to count as a swipe
-      const minSwipeDistance = 30;
-      
-      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-        wasSwiped = true; // Mark that we detected a swipe
-        console.log('Swipe detected:', deltaX > 0 ? 'Right' : 'Left');
-        
-        if (deltaX > 0) {
-          // Swipe right - turn right
-          PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
-          console.log('Turning right');
-        } else {
-          // Swipe left - turn left
-          PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
-          console.log('Turning left');
-        }
+      if (deltaX > 0) {
+        // Swipe right - turn right
+        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+        console.log('Turning right');
       } else {
-        console.log('Not a valid swipe', {
-          deltaXTest: Math.abs(deltaX) > Math.abs(deltaY),
-          distanceTest: Math.abs(deltaX) > minSwipeDistance
-        });
+        // Swipe left - turn left
+        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+        console.log('Turning left');
       }
-    });
+    } else {
+      console.log('Not a valid swipe', {
+        deltaXTest: Math.abs(deltaX) > Math.abs(deltaY),
+        distanceTest: Math.abs(deltaX) > minSwipeDistance
+      });
+    }
+  });
     
     // Convert tap controls to use touchend instead of touchstart
     leftZone.addEventListener('touchend', function(e) {
