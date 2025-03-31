@@ -1,4 +1,4 @@
-/* Complete Rewrite of Touch Controls - Replace the content in js/controls.js */
+/* Improved Swipe Controls with Better Separation from Taps */
 
 function setupControls() {
   // Keyboard controls
@@ -41,63 +41,139 @@ function onKeyDown(event) {
   }
 }
 
-// The true fix: separate tap and swipe handling completely
 function setupTouchControls() {
-  console.log("Setting up touch controls");
+  console.log("Setting up touch controls with improved swipe detection");
   
   // Get the elements we need
   const leftZone = document.getElementById('leftTouchZone');
   const rightZone = document.getElementById('rightTouchZone');
   const gameContainer = document.getElementById('gameContainer');
   
-  // Simple direct tap controls - most reliable method
-  leftZone.addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    if (!CONFIG.STATE.isPaused && !CONFIG.STATE.isGameOver && CONFIG.STATE.gameStarted) {
-      console.log("Left zone tapped");
-      PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
-    }
-  });
-  
-  rightZone.addEventListener('touchstart', function(e) {
-    e.preventDefault();
-    if (!CONFIG.STATE.isPaused && !CONFIG.STATE.isGameOver && CONFIG.STATE.gameStarted) {
-      console.log("Right zone tapped");
-      PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
-    }
-  });
-  
-  // Add swipe detection on the game container
+  // Global touch tracking variables
   let touchStartX = 0;
   let touchStartY = 0;
+  let isSwiping = false;
+  let touchMoveDistance = 0;
   
+  // To track if a touch is being processed as a swipe
+  const SWIPE_THRESHOLD = 50; // Pixels
+  
+  // Handle touch start - capture starting position
   gameContainer.addEventListener('touchstart', function(e) {
+    if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
+    
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
-  });
+    isSwiping = false;
+    touchMoveDistance = 0;
+    
+    // Prevent default to avoid iOS double-tap zooming
+    e.preventDefault();
+  }, { passive: false });
   
+  // Handle touch move - detect if swiping
+  gameContainer.addEventListener('touchmove', function(e) {
+    if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
+    
+    const touchX = e.touches[0].clientX;
+    const touchY = e.touches[0].clientY;
+    
+    // Calculate horizontal distance moved
+    const deltaX = touchX - touchStartX;
+    const deltaY = touchY - touchStartY;
+    
+    // Update the total distance moved
+    touchMoveDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
+    
+    // If moved far enough and mostly horizontal, mark as swiping
+    if (touchMoveDistance > SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY)) {
+      isSwiping = true;
+      
+      // Process the swipe immediately for better responsiveness
+      if (deltaX > 0) {
+        // Right swipe
+        console.log("Right swipe detected, distance:", touchMoveDistance);
+        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+      } else {
+        // Left swipe
+        console.log("Left swipe detected, distance:", touchMoveDistance);
+        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+      }
+      
+      // Reset start position to prevent multiple swipes in the same gesture
+      touchStartX = touchX;
+      touchStartY = touchY;
+    }
+    
+    // Prevent scrolling
+    e.preventDefault();
+  }, { passive: false });
+  
+  // Handle touch end
   gameContainer.addEventListener('touchend', function(e) {
-    if (!CONFIG.STATE.isPaused && !CONFIG.STATE.isGameOver && CONFIG.STATE.gameStarted) {
-      const touchEndX = e.changedTouches[0].clientX;
-      const touchEndY = e.changedTouches[0].clientY;
+    if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
+    
+    // If not processed as a swipe and the movement was minimal, treat as a tap
+    if (!isSwiping && touchMoveDistance < 10) {
+      // Determine which side of the screen was tapped
+      const touchX = e.changedTouches[0].clientX;
+      const halfWidth = window.innerWidth / 2;
       
-      const deltaX = touchEndX - touchStartX;
-      const deltaY = touchEndY - touchStartY;
-      
-      // If horizontal swipe is significant
-      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > 40) {
-        if (deltaX > 0) {
-          // Right swipe
-          console.log("Right swipe detected");
-          PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
-        } else {
-          // Left swipe
-          console.log("Left swipe detected");
-          PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
-        }
+      if (touchX < halfWidth) {
+        // Left side tapped
+        console.log("Left tap detected");
+        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+      } else {
+        // Right side tapped
+        console.log("Right tap detected");
+        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
       }
     }
-  });
+  }, { passive: false });
+  
+  // Also add separate handlers for the zone divs for more reliable taps
+  leftZone.addEventListener('touchstart', function(e) {
+    if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
+    // Remember this touch to check if it became a swipe
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    e.preventDefault();
+  }, { passive: false });
+  
+  rightZone.addEventListener('touchstart', function(e) {
+    if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
+    // Remember this touch to check if it became a swipe
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    e.preventDefault();
+  }, { passive: false });
+  
+  leftZone.addEventListener('touchend', function(e) {
+    if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
+    
+    // Only process as tap if didn't move much
+    if (!isSwiping && touchMoveDistance < 10) {
+      console.log("Left zone tap detected");
+      PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+    }
+    e.preventDefault();
+  }, { passive: false });
+  
+  rightZone.addEventListener('touchend', function(e) {
+    if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
+    
+    // Only process as tap if didn't move much
+    if (!isSwiping && touchMoveDistance < 10) {
+      console.log("Right zone tap detected");
+      PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+    }
+    e.preventDefault();
+  }, { passive: false });
+  
+  // Make sure we prevent default scrolling on touch zones
+  document.getElementById('touchControls').addEventListener('touchmove', function(e) {
+    e.preventDefault();
+  }, { passive: false });
   
   // Update control instructions
   const controlsInfo = document.getElementById('controlsInfo');
@@ -107,11 +183,6 @@ function setupTouchControls() {
       <p>MOBILE: Tap left/right sides or swipe left/right to turn</p>
     `;
   }
-  
-  // Make sure we prevent default scrolling on touch zones
-  document.getElementById('touchControls').addEventListener('touchmove', function(e) {
-    e.preventDefault();
-  }, { passive: false });
 }
 
 function togglePause() {
