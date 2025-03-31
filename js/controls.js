@@ -1,4 +1,4 @@
-/* Improved Swipe Controls with Better Separation from Taps */
+/* Complete Rewrite of Touch Controls */
 
 function setupControls() {
   // Keyboard controls
@@ -20,12 +20,12 @@ function onKeyDown(event) {
   switch (event.keyCode) {
     case 37: // Left arrow => turn left
       if (!CONFIG.STATE.isPaused) {
-        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+        turnLeft();
       }
       break;
     case 39: // Right arrow => turn right
       if (!CONFIG.STATE.isPaused) {
-        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+        turnRight();
       }
       break;
     case 82: // R key => restart
@@ -41,136 +41,108 @@ function onKeyDown(event) {
   }
 }
 
+// Define turn functions for consistency
+function turnLeft() {
+  console.log("TURN LEFT");
+  PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+}
+
+function turnRight() {
+  console.log("TURN RIGHT");
+  PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+}
+
 function setupTouchControls() {
-  console.log("Setting up touch controls with improved swipe detection");
+  console.log("Setting up SIMPLIFIED touch controls");
   
-  // Get the elements we need
+  // First, remove any existing touch listeners to prevent interference
+  const gameContainer = document.getElementById('gameContainer');
+  const newGameContainer = gameContainer.cloneNode(true);
+  gameContainer.parentNode.replaceChild(newGameContainer, gameContainer);
+  
+  // Get the touch zones from the cloned container
   const leftZone = document.getElementById('leftTouchZone');
   const rightZone = document.getElementById('rightTouchZone');
-  const gameContainer = document.getElementById('gameContainer');
   
-  // Global touch tracking variables
+  // Variables for tracking swipes
   let touchStartX = 0;
   let touchStartY = 0;
   let isSwiping = false;
-  let touchMoveDistance = 0;
+  let lastSwipeDirection = null;
+  let lastSwipeTime = 0;
   
-  // To track if a touch is being processed as a swipe
-  const SWIPE_THRESHOLD = 50; // Pixels
+  // Constants
+  const SWIPE_THRESHOLD = 40;
+  const SWIPE_COOLDOWN = 500; // ms between swipes
   
-  // Handle touch start - capture starting position
-  gameContainer.addEventListener('touchstart', function(e) {
+  // Add swipe detection to the game container
+  newGameContainer.addEventListener('touchstart', function(e) {
     if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
     
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
     isSwiping = false;
-    touchMoveDistance = 0;
     
-    // Prevent default to avoid iOS double-tap zooming
     e.preventDefault();
   }, { passive: false });
   
-  // Handle touch move - detect if swiping
-  gameContainer.addEventListener('touchmove', function(e) {
+  // Clean swipe detection
+  newGameContainer.addEventListener('touchmove', function(e) {
     if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
+    if (isSwiping) return; // Only process one swipe per touch
     
     const touchX = e.touches[0].clientX;
     const touchY = e.touches[0].clientY;
     
-    // Calculate horizontal distance moved
     const deltaX = touchX - touchStartX;
     const deltaY = touchY - touchStartY;
     
-    // Update the total distance moved
-    touchMoveDistance = Math.sqrt(deltaX * deltaX + deltaY * deltaY);
-    
-    // If moved far enough and mostly horizontal, mark as swiping
-    if (touchMoveDistance > SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY)) {
+    // Check if this is a significant horizontal movement
+    if (Math.abs(deltaX) > SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY) * 1.5) {
       isSwiping = true;
       
-      // Process the swipe immediately for better responsiveness
+      const now = Date.now();
+      
+      // Cooldown to prevent rapid swipes
+      if (now - lastSwipeTime < SWIPE_COOLDOWN) {
+        return;
+      }
+      
+      lastSwipeTime = now;
+      
+      // Check swipe direction and turn
       if (deltaX > 0) {
-        // Right swipe
-        console.log("Right swipe detected - turning RIGHT");
-        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x); // LEFT turn function
-    } else {
-        // Left swipe
-        console.log("Left swipe detected - turning LEFT");
-        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x); // RIGHT turn function
-    }
-      
-      // Reset start position to prevent multiple swipes in the same gesture
-      touchStartX = touchX;
-      touchStartY = touchY;
-    }
-    
-    // Prevent scrolling
-    e.preventDefault();
-  }, { passive: false });
-  
-  // Handle touch end
-  gameContainer.addEventListener('touchend', function(e) {
-    if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
-    
-    // If not processed as a swipe and the movement was minimal, treat as a tap
-    if (!isSwiping && touchMoveDistance < 10) {
-      // Determine which side of the screen was tapped
-      const touchX = e.changedTouches[0].clientX;
-      const halfWidth = window.innerWidth / 2;
-      
-      if (touchX < halfWidth) {
-        // Left side tapped
-        console.log("Left tap detected");
-        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+        // Swipe RIGHT, so turn LEFT (this is the swap/fix)
+        console.log("RIGHT SWIPE - deltaX:", deltaX);
+        lastSwipeDirection = "right";
+        turnLeft();
       } else {
-        // Right side tapped
-        console.log("Right tap detected");
-        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+        // Swipe LEFT, so turn RIGHT (this is the swap/fix)
+        console.log("LEFT SWIPE - deltaX:", deltaX);
+        lastSwipeDirection = "left";
+        turnRight();
       }
     }
-  }, { passive: false });
-  
-  // Also add separate handlers for the zone divs for more reliable taps
-  leftZone.addEventListener('touchstart', function(e) {
-    if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
-    // Remember this touch to check if it became a swipe
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
+    
     e.preventDefault();
   }, { passive: false });
   
-  rightZone.addEventListener('touchstart', function(e) {
-    if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
-    // Remember this touch to check if it became a swipe
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    e.preventDefault();
-  }, { passive: false });
-  
-  leftZone.addEventListener('touchend', function(e) {
+  // Direct tap zones for simple and reliable controls
+  leftZone.addEventListener('click', function(e) {
     if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
     
-    // Only process as tap if didn't move much
-    if (!isSwiping && touchMoveDistance < 10) {
-      console.log("Left zone tap detected");
-      PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
-    }
-    e.preventDefault();
-  }, { passive: false });
+    console.log("LEFT TAP");
+    turnLeft();
+  });
   
-  rightZone.addEventListener('touchend', function(e) {
+  rightZone.addEventListener('click', function(e) {
     if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
     
-    // Only process as tap if didn't move much
-    if (!isSwiping && touchMoveDistance < 10) {
-      console.log("Right zone tap detected");
-      PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
-    }
-    e.preventDefault();
-  }, { passive: false });
+    console.log("RIGHT TAP");
+    turnRight();
+  });
   
-  // Make sure we prevent default scrolling on touch zones
+  // Prevent scrolling on all touch zones
   document.getElementById('touchControls').addEventListener('touchmove', function(e) {
     e.preventDefault();
   }, { passive: false });
@@ -180,7 +152,7 @@ function setupTouchControls() {
   if (controlsInfo) {
     controlsInfo.innerHTML = `
       <p>DESKTOP: Arrow keys to turn, R to restart, P to pause, E for effects</p>
-      <p>MOBILE: Tap left/right sides or swipe left/right to turn</p>
+      <p>MOBILE: Tap left/right sides or swipe left/right to turn (Swipe RIGHT = turn LEFT)</p>
     `;
   }
 }
