@@ -92,13 +92,13 @@ function setupTouchControls() {
       // Process the swipe immediately for better responsiveness
       if (deltaX > 0) {
         // Right swipe
-        console.log("Right swipe detected, distance:", touchMoveDistance);
-        PLAYER.direction.set(-PLAYER.direction.z, 0, -PLAYER.direction.x);
-      } else {
+        console.log("Right swipe detected - turning RIGHT");
+        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x); // LEFT turn function
+    } else {
         // Left swipe
-        console.log("Left swipe detected, distance:", touchMoveDistance);
-        PLAYER.direction.set(PLAYER.direction.z, 0, PLAYER.direction.x);
-      }
+        console.log("Left swipe detected - turning LEFT");
+        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x); // RIGHT turn function
+    }
       
       // Reset start position to prevent multiple swipes in the same gesture
       touchStartX = touchX;
