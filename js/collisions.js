@@ -14,9 +14,9 @@ const collisionBoxes = {
   
   // Collision detection constants
   const COLLISION = {
-    PLAYER_SIZE: { width: 4, height: 6, depth: 0.5 },
-    AI_SIZE: { width: 4, height: 6, depth: 0.5 },
-    TRAIL_SIZE: { width: 2, height: 6, depth: 0.5 },
+    PLAYER_SIZE: { width: 4, height: 6, depth: 1 },
+    AI_SIZE: { width: 4, height: 6, depth: 1 },
+    TRAIL_SIZE: { width: 2, height: 6, depth: 1 },
     POWERUP_RADIUS: 4,
     BOUNDARY_MARGIN: 5,
     MIN_OBSTACLE_DISTANCE: 8,
@@ -601,7 +601,19 @@ function checkBoxTetrahedronCollision(box, tetrahedron) {
     
     const playerBox = collisionBoxes.player;
     
-    // 1. Boundary collision with fast checks
+    // Create an additional "nose" collision box that extends further forward
+    const playerDirection = PLAYER.direction.clone().normalize();
+    const nosePosition = PLAYER.bike.position.clone().add(
+      playerDirection.clone().multiplyScalar(10) // Extend 3 units forward
+    );
+    
+    const noseBox = {
+      position: nosePosition,
+      rotation: playerBox.rotation,
+      size: { width: 2, height: 2, depth: 0.5 } // Smaller than the main box
+    };
+    
+    // 1. Boundary collision checks - no change
     if (
       Math.abs(playerBox.position.x) > CONFIG.WORLD_SIZE / 2 - COLLISION.BOUNDARY_MARGIN ||
       Math.abs(playerBox.position.z) > CONFIG.WORLD_SIZE / 2 - COLLISION.BOUNDARY_MARGIN
@@ -609,7 +621,7 @@ function checkBoxTetrahedronCollision(box, tetrahedron) {
       return { collision: true, reason: "wall" };
     }
     
-    // 2. Obstacle collisions
+    // 2. Obstacle collisions - check both main box and nose
     for (const obstacleCache of collisionBoxes.obstacles) {
       if (!obstacleCache || !obstacleCache.position || !obstacleCache.object) continue;
       
@@ -622,12 +634,18 @@ function checkBoxTetrahedronCollision(box, tetrahedron) {
         continue;
       }
       
+      // Check main box
       if (checkObstacleCollision(playerBox, obstacleCache)) {
+        return { collision: true, reason: "obstacle" };
+      }
+      
+      // Check nose box - ONLY for obstacles, not for trails!
+      if (checkObstacleCollision(noseBox, obstacleCache)) {
         return { collision: true, reason: "obstacle" };
       }
     }
     
-    // 3. Own trail collision
+    // 3. Own trail collision - IMPORTANT: Only use main box, not nose!
     for (let i = 0; i < PLAYER.trail.length - COLLISION.TRAIL_SEGMENTS_TO_IGNORE; i++) {
       const segment = PLAYER.trail[i];
       if (!segment || !segment.mesh) continue;
@@ -641,9 +659,11 @@ function checkBoxTetrahedronCollision(box, tetrahedron) {
       if (checkOrientedBoxCollision(playerBox, trailBox)) {
         return { collision: true, reason: "own trail" };
       }
+      
+      // Do NOT check nose collision with own trail
     }
     
-    // 4. AI bikes and trails
+    // 4. AI bikes and trails - check both boxes for AI bikes, only main box for trails
     for (const aiBike of AI.bikes) {
       if (!aiBike || !aiBike.position) continue;
       
@@ -651,6 +671,10 @@ function checkBoxTetrahedronCollision(box, tetrahedron) {
       const aiBox = collisionBoxes.ais[aiIndex];
       
       if (aiBox && checkOrientedBoxCollision(playerBox, aiBox)) {
+        return { collision: true, reason: "AI bike" };
+      }
+      
+      if (aiBox && checkOrientedBoxCollision(noseBox, aiBox)) {
         return { collision: true, reason: "AI bike" };
       }
       
@@ -668,6 +692,8 @@ function checkBoxTetrahedronCollision(box, tetrahedron) {
           if (checkOrientedBoxCollision(playerBox, trailBox)) {
             return { collision: true, reason: "AI trail" };
           }
+          
+          // Do NOT check nose collision with trails
         }
       }
     }
