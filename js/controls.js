@@ -76,11 +76,11 @@ function setupTouchControls() {
       wasSwiped = true; // Mark that we detected a swipe
       
       if (deltaX > 0) {
-        // Swipe right - turn right
-        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
-      } else {
-        // Swipe left - turn left
+        // Swipe right - REVERSED: turn LEFT instead of right
         PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+      } else {
+        // Swipe left - REVERSED: turn RIGHT instead of left
+        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
       }
     }
   });
@@ -136,7 +136,7 @@ function setupTouchControls() {
   if (controlsInfo) {
     controlsInfo.innerHTML = `
       <p>DESKTOP: Arrow keys to turn, R to restart, P to pause, E for effects</p>
-      <p>MOBILE: Tap left/right sides or swipe left/right to turn</p>
+      <p>MOBILE: Tap left/right sides or swipe left/right to turn (Swipe RIGHT = turn LEFT)</p>
     `;
   }
 }
