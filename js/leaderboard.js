@@ -1,33 +1,64 @@
-// This is an enhanced version of the leaderboard system with improved UI
+/* ------------------ GOOGLE SHEETS LEADERBOARD SYSTEM ------------------ */
 
-/* ------------------ ENHANCED GLOBAL LEADERBOARD SYSTEM ------------------ */
-
-function setupLeaderboard() {
+function setupOnlineLeaderboard() {
   // Your Google Apps Script Web App URL (you'll get this after deployment)
-  const LEADERBOARD_API_URL = 'https://script.google.com/macros/s/AKfycbw3l81ORv814sHKxXgD2Th03C1M_vRm9w9uXzpobVURsqQ2sTVLoyiHzdUTllddFka2CQ/exec';
+  const LEADERBOARD_API_URL = 'https://script.google.com/macros/s/AKfycbzTVMkmQLpndNKo7kuSf5OqCBjMXTwvyW39eTJW8eQIM2S-gKZ41CpvvFvVPRztgmv7PA/exec';
+  
+  // Security key (should match what you set in your Google Apps Script)
+  const API_KEY = 'dam-9789';
   
   // Leaderboard state
   let leaderboardData = [];
   let playerRank = null;
   let isLoading = false;
+  let requestCount = 0;
+  const MAX_REQUESTS = 10; // Limit API calls per session
   
-  // Function to save score to leaderboard
+  // Function to save score to leaderboard with basic security measures
   async function saveScoreToLeaderboard(name, score) {
+    // Check request limit for this session
+    if (requestCount >= MAX_REQUESTS) {
+      console.warn('Too many requests in this session. Try refreshing the page.');
+      showToastMessage('Score saved locally only. Try refreshing to update online.');
+      return false;
+    }
+    
     try {
       isLoading = true;
       updateLeaderboardStatus('SUBMITTING SCORE...');
       
+      // Input validation
+      if (!name || name.length > 15 || !score || score < 0 || score > 100000) {
+        console.warn('Invalid name or score');
+        showToastMessage('Invalid data, score saved locally only.');
+        isLoading = false;
+        return false;
+      }
+      
+      // Add timestamp for request uniqueness
+      const timestamp = Date.now();
+      
+      // Increment request counter
+      requestCount++;
+      
       const response = await fetch(LEADERBOARD_API_URL, {
         method: 'POST',
-        body: JSON.stringify({ name, score }),
+        body: JSON.stringify({ 
+          name, 
+          score, 
+          timestamp, 
+          apiKey: API_KEY 
+        }),
         headers: {
           'Content-Type': 'application/json'
         }
       });
       
       if (!response.ok) {
+        // Also save locally as fallback
+        addToLocalLeaderboard(name, score);
         console.warn('Error saving score to online leaderboard');
-        showToastMessage('Score submitted, but there was a connection issue');
+        showToastMessage('Score saved locally only. Server connection issue.');
         isLoading = false;
         return false;
       }
@@ -41,18 +72,37 @@ function setupLeaderboard() {
         isLoading = false;
         return true;
       } else {
+        // Also save locally as fallback
+        addToLocalLeaderboard(name, score);
         console.warn('API error:', result.message);
-        showToastMessage('Score submitted, but there was a server issue');
+        showToastMessage('Score saved locally only. Server error.');
         isLoading = false;
         return false;
       }
     } catch (error) {
+      // Also save locally as fallback
+      addToLocalLeaderboard(name, score);
       console.warn('Error saving score:', error);
-      showToastMessage('Could not connect to leaderboard server');
+      showToastMessage('Score saved locally. Network error.');
       updateLeaderboardStatus('OFFLINE');
       isLoading = false;
       return false;
     }
+  }
+  
+  // Local fallback function
+  function addToLocalLeaderboard(name, score) {
+    const leaderboard = JSON.parse(localStorage.getItem('neonTrailblazerLeaderboard') || '[]');
+    leaderboard.push({
+      name: name,
+      score: score,
+      date: new Date().toISOString()
+    });
+    
+    leaderboard.sort((a, b) => b.score - a.score);
+    const limitedLeaderboard = leaderboard.slice(0, 50);
+    
+    localStorage.setItem('neonTrailblazerLeaderboard', JSON.stringify(limitedLeaderboard));
   }
   
   // Function to show a temporary notification
@@ -115,7 +165,7 @@ function setupLeaderboard() {
       if (status === 'ONLINE') {
         leaderboardTitle.innerHTML = 'GLOBAL LEADERBOARD <span style="color:#0f0;font-size:14px;">[ONLINE]</span>';
       } else if (status === 'OFFLINE') {
-        leaderboardTitle.innerHTML = 'LEADERBOARD <span style="color:#ff0;font-size:14px;">[OFFLINE]</span>';
+        leaderboardTitle.innerHTML = 'LOCAL LEADERBOARD <span style="color:#ff0;font-size:14px;">[OFFLINE]</span>';
       } else if (status === 'LOADING') {
         leaderboardTitle.innerHTML = 'LEADERBOARD <span style="color:#0ff;font-size:14px;">[LOADING]</span>';
       } else if (status === 'SUBMITTING SCORE...') {
@@ -126,12 +176,17 @@ function setupLeaderboard() {
     }
   }
   
-  // Function to fetch and display leaderboard
+  // Function to fetch and display leaderboard with fallback to local
   async function displayLeaderboard() {
     if (isLoading) return;
     
     try {
       isLoading = true;
+      
+      // Check request limit
+      if (requestCount >= MAX_REQUESTS) {
+        throw new Error('Request limit reached for this session');
+      }
       
       // Show loading message
       const leaderboardBody = document.getElementById('leaderboardBody');
@@ -140,8 +195,11 @@ function setupLeaderboard() {
       // Update indicator
       updateLeaderboardStatus('LOADING');
       
+      // Increment request counter
+      requestCount++;
+      
       // Fetch leaderboard data
-      const response = await fetch(LEADERBOARD_API_URL);
+      const response = await fetch(`${LEADERBOARD_API_URL}?t=${Date.now()}`);
       
       if (!response.ok) {
         throw new Error('Failed to fetch leaderboard');
@@ -206,26 +264,82 @@ function setupLeaderboard() {
       // Add refresh button
       addRefreshButton();
       
+      // Add mode toggle button to switch to local leaderboard
+      addModeToggleButton();
+      
     } catch (error) {
-      console.error('Error fetching leaderboard:', error);
+      console.error('Error fetching online leaderboard:', error);
       
-      // Show error message
-      const leaderboardBody = document.getElementById('leaderboardBody');
-      leaderboardBody.innerHTML = `
-        <tr><td colspan="4">Could not connect to leaderboard server</td></tr>
-        <tr><td colspan="4"><button id="retryLeaderboard" style="margin-top:10px;">Retry Connection</button></td></tr>
-      `;
-      
-      // Add retry button handler
-      document.getElementById('retryLeaderboard').addEventListener('click', () => {
-        displayLeaderboard();
-      });
-      
-      // Update indicator
-      updateLeaderboardStatus('OFFLINE');
+      // Fall back to local leaderboard
+      displayLocalLeaderboard();
     }
     
     isLoading = false;
+  }
+  
+  // Display local leaderboard as fallback
+  function displayLocalLeaderboard() {
+    const leaderboard = JSON.parse(localStorage.getItem('neonTrailblazerLeaderboard') || '[]');
+    const leaderboardBody = document.getElementById('leaderboardBody');
+    leaderboardBody.innerHTML = '';
+    
+    // Update indicator
+    updateLeaderboardStatus('OFFLINE');
+    
+    if (leaderboard.length === 0) {
+      const row = document.createElement('tr');
+      row.innerHTML = '<td colspan="4">No local scores yet</td>';
+      leaderboardBody.appendChild(row);
+    } else {
+      leaderboard.sort((a, b) => b.score - a.score);
+      
+      for (let i = 0; i < Math.min(10, leaderboard.length); i++) {
+        const entry = leaderboard[i];
+        const row = document.createElement('tr');
+        
+        // Highlight the player's own score
+        if (playerName && entry.name === playerName) {
+          row.className = 'player-row';
+          row.style.backgroundColor = 'rgba(255, 0, 255, 0.3)';
+        }
+        
+        row.innerHTML = `
+          <td>${i + 1}</td>
+          <td>${entry.name}</td>
+          <td>${entry.score}</td>
+          <td>${formatDate(entry.date)}</td>
+        `;
+        
+        leaderboardBody.appendChild(row);
+      }
+    }
+    
+    // Add retry button
+    const retryButton = document.createElement('button');
+    retryButton.id = 'retryOnlineLeaderboard';
+    retryButton.textContent = 'TRY ONLINE';
+    retryButton.style.marginTop = '10px';
+    retryButton.style.marginRight = '10px';
+    
+    // Add to leaderboard
+    const leaderboardPanel = document.getElementById('leaderboardPanel');
+    const closeButton = document.getElementById('closeLeaderboard');
+    
+    if (closeButton && closeButton.parentNode) {
+      // Remove existing buttons
+      const existingRefresh = document.getElementById('refreshLeaderboard');
+      const existingToggle = document.getElementById('toggleLeaderboard');
+      if (existingRefresh) existingRefresh.remove();
+      if (existingToggle) existingToggle.remove();
+      
+      // Add retry button
+      closeButton.parentNode.insertBefore(retryButton, closeButton);
+      
+      // Add retry button handler
+      retryButton.addEventListener('click', () => {
+        displayLeaderboard();
+      });
+    }
   }
   
   // Add refresh button to leaderboard
@@ -256,7 +370,44 @@ function setupLeaderboard() {
     }
   }
   
-  // Format date for display (uses the existing utility if available)
+  // Add local/online toggle button
+  function addModeToggleButton() {
+    const leaderboardPanel = document.getElementById('leaderboardPanel');
+    const closeButton = document.getElementById('closeLeaderboard');
+    
+    // Remove existing toggle button if present
+    const existingButton = document.getElementById('toggleLeaderboard');
+    if (existingButton) {
+      existingButton.remove();
+    }
+    
+    // Create toggle button
+    const toggleButton = document.createElement('button');
+    toggleButton.id = 'toggleLeaderboard';
+    toggleButton.textContent = 'SHOW LOCAL';
+    toggleButton.style.marginLeft = '10px';
+    
+    // Add before close button
+    if (closeButton && closeButton.parentNode) {
+      closeButton.parentNode.insertBefore(toggleButton, closeButton);
+      
+      // Add click handler
+      let showingOnline = true;
+      toggleButton.addEventListener('click', () => {
+        if (showingOnline) {
+          displayLocalLeaderboard();
+          toggleButton.textContent = 'SHOW ONLINE';
+          showingOnline = false;
+        } else {
+          displayLeaderboard();
+          toggleButton.textContent = 'SHOW LOCAL';
+          showingOnline = true;
+        }
+      });
+    }
+  }
+  
+  // Format date for display
   function formatDate(dateString) {
     if (typeof UTILS !== 'undefined' && UTILS.formatDate) {
       return UTILS.formatDate(dateString);
@@ -303,7 +454,7 @@ function setupLeaderboard() {
         text-shadow: 0 0 5px #ff00ff;
       }
       
-      #refreshLeaderboard, #closeLeaderboard {
+      #refreshLeaderboard, #toggleLeaderboard, #retryOnlineLeaderboard, #closeLeaderboard {
         margin-top: 15px;
         background: transparent;
         border: 2px solid #0ff;
@@ -316,7 +467,7 @@ function setupLeaderboard() {
         text-shadow: 0 0 5px #0ff;
       }
       
-      #refreshLeaderboard:hover, #closeLeaderboard:hover {
+      #refreshLeaderboard:hover, #toggleLeaderboard:hover, #retryOnlineLeaderboard:hover, #closeLeaderboard:hover {
         background: rgba(0, 255, 255, 0.2);
       }
     `;
@@ -328,24 +479,29 @@ function setupLeaderboard() {
     // Store the current player name globally
     window.playerName = name;
     
-    // Save score to online leaderboard
+    // Always save locally first as a backup
+    addToLocalLeaderboard(name, score);
+    
+    // Try to save online
     saveScoreToLeaderboard(name, score).catch(console.error);
   };
   
   // Override the showLeaderboard function
   window.showLeaderboard = function () {
-    displayLeaderboard().catch(console.error);
+    displayLeaderboard().catch(error => {
+      console.error("Error showing online leaderboard:", error);
+      displayLocalLeaderboard();
+    });
     document.getElementById('leaderboardPanel').style.display = 'block';
+  };
+  
+  // Override the hideLeaderboard function
+  window.hideLeaderboard = function () {
+    document.getElementById('leaderboardPanel').style.display = 'none';
   };
   
   // Initialize styles
   initLeaderboardStyles();
-  
-  // Remove the toggle button since we're not supporting local scores anymore
-  const toggleButton = document.getElementById('toggleLeaderboard');
-  if (toggleButton) {
-    toggleButton.remove();
-  }
   
   // Return API for testing
   return {
@@ -354,5 +510,5 @@ function setupLeaderboard() {
   };
 }
 
-// Initialize the leaderboard system
-const leaderboardSystem = setupLeaderboard();
+// Initialize the leaderboard system (this should be called from main.js after setupUI())
+// setupOnlineLeaderboard();
