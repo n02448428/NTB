@@ -99,7 +99,7 @@ function setupTouchControls() {
       lastSwipeTime = now;
       
       // Process the swipe immediately for better responsiveness
-      if (deltaX > 0) {
+      if (deltaX < 0) {
         // Right swipe - turning RIGHT (swiping from left to right)
         console.log("Right swipe detected - turning RIGHT");
         PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
