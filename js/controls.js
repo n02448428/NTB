@@ -1,4 +1,4 @@
-/* Fixed Swipe Direction Controls */
+/* Improved Swipe Controls with Better Separation from Taps */
 
 function setupControls() {
   // Keyboard controls
@@ -42,7 +42,7 @@ function onKeyDown(event) {
 }
 
 function setupTouchControls() {
-  console.log("Setting up touch controls with FIXED swipe direction");
+  console.log("Setting up touch controls with improved swipe detection");
   
   // Get the elements we need
   const leftZone = document.getElementById('leftTouchZone');
@@ -89,16 +89,14 @@ function setupTouchControls() {
     if (touchMoveDistance > SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY)) {
       isSwiping = true;
       
-      // FIXED: Swipe direction now matches the visual direction
+      // Process the swipe immediately for better responsiveness
       if (deltaX > 0) {
-        // Right swipe - turn RIGHT
-        console.log("Right swipe detected - turning RIGHT");
-        // This turns the bike to the RIGHT
+        // Right swipe
+        console.log("Right swipe detected, distance:", touchMoveDistance);
         PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
       } else {
-        // Left swipe - turn LEFT
-        console.log("Left swipe detected - turning LEFT");
-        // This turns the bike to the LEFT
+        // Left swipe
+        console.log("Left swipe detected, distance:", touchMoveDistance);
         PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
       }
       
@@ -122,18 +120,57 @@ function setupTouchControls() {
       const halfWidth = window.innerWidth / 2;
       
       if (touchX < halfWidth) {
-        // Left side tapped - turn LEFT
-        console.log("Left tap detected - turning LEFT");
+        // Left side tapped
+        console.log("Left tap detected");
         PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
       } else {
-        // Right side tapped - turn RIGHT
-        console.log("Right tap detected - turning RIGHT");
+        // Right side tapped
+        console.log("Right tap detected");
         PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
       }
     }
   }, { passive: false });
   
-  // Prevent scrolling on touch zones
+  // Also add separate handlers for the zone divs for more reliable taps
+  leftZone.addEventListener('touchstart', function(e) {
+    if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
+    // Remember this touch to check if it became a swipe
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    e.preventDefault();
+  }, { passive: false });
+  
+  rightZone.addEventListener('touchstart', function(e) {
+    if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
+    // Remember this touch to check if it became a swipe
+    touchStartX = e.touches[0].clientX;
+    touchStartY = e.touches[0].clientY;
+    e.preventDefault();
+  }, { passive: false });
+  
+  leftZone.addEventListener('touchend', function(e) {
+    if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
+    
+    // Only process as tap if didn't move much
+    if (!isSwiping && touchMoveDistance < 10) {
+      console.log("Left zone tap detected");
+      PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+    }
+    e.preventDefault();
+  }, { passive: false });
+  
+  rightZone.addEventListener('touchend', function(e) {
+    if (!CONFIG.STATE.gameStarted || CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver) return;
+    
+    // Only process as tap if didn't move much
+    if (!isSwiping && touchMoveDistance < 10) {
+      console.log("Right zone tap detected");
+      PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+    }
+    e.preventDefault();
+  }, { passive: false });
+  
+  // Make sure we prevent default scrolling on touch zones
   document.getElementById('touchControls').addEventListener('touchmove', function(e) {
     e.preventDefault();
   }, { passive: false });
