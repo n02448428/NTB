@@ -43,74 +43,48 @@ function setupControls() {
   }
   
   function setupTouchControls() {
-  const gameContainer = document.getElementById('gameContainer');
-  let touchStartX = 0;
-  let touchStartY = 0;
-  let wasSwiped = false; // Flag to track if a swipe was detected
-
-  gameContainer.addEventListener('touchstart', function(e) {
-    touchStartX = e.touches[0].clientX;
-    touchStartY = e.touches[0].clientY;
-    wasSwiped = false; // Reset swipe flag on new touch
-    console.log('Touch start:', touchStartX, touchStartY);
-  });
-
-  gameContainer.addEventListener('touchmove', function(e) {
-    // This can help track continuous touch movement
-    console.log('Touch move detected');
-  });
-
-  gameContainer.addEventListener('touchend', function(e) {
-    console.log('Game state:', {
-      isPaused: CONFIG.STATE.isPaused,
-      isGameOver: CONFIG.STATE.isGameOver,
-      gameStarted: CONFIG.STATE.gameStarted
-    });
-
-    if (CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver || !CONFIG.STATE.gameStarted) {
-      console.log('Touch end ignored due to game state');
-      return;
-    }
+    const leftZone = document.getElementById('leftTouchZone');
+    const rightZone = document.getElementById('rightTouchZone');
+    const gameContainer = document.getElementById('gameContainer');
     
-    const touchEndX = e.changedTouches[0].clientX;
-    const touchEndY = e.changedTouches[0].clientY;
+    // Variables to track touch
+    let touchStartX = 0;
+    let touchStartY = 0;
+    let wasSwiped = false; // Flag to track if a swipe was detected
     
-    // Calculate swipe direction
-    const deltaX = touchEndX - touchStartX;
-    const deltaY = touchEndY - touchStartY;
-    
-    console.log('Touch end:', {
-      startX: touchStartX,
-      startY: touchStartY,
-      endX: touchEndX,
-      endY: touchEndY,
-      deltaX: deltaX,
-      deltaY: deltaY
+    // Track touch start position for the entire game
+    gameContainer.addEventListener('touchstart', function(e) {
+      touchStartX = e.touches[0].clientX;
+      touchStartY = e.touches[0].clientY;
+      wasSwiped = false; // Reset swipe flag on new touch
     });
     
-    // Minimum pixels to count as a swipe
-    const minSwipeDistance = 30;
-    
-    if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
-      wasSwiped = true; // Mark that we detected a swipe
-      console.log('Swipe detected:', deltaX > 0 ? 'Right' : 'Left');
+    // Detect swipe on touch end
+    gameContainer.addEventListener('touchend', function(e) {
+      if (CONFIG.STATE.isPaused || CONFIG.STATE.isGameOver || !CONFIG.STATE.gameStarted) return;
       
-      if (deltaX > 0) {
-        // Swipe right - turn right
-        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
-        console.log('Turning right');
-      } else {
-        // Swipe left - turn left
-        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
-        console.log('Turning left');
+      const touchEndX = e.changedTouches[0].clientX;
+      const touchEndY = e.changedTouches[0].clientY;
+      
+      // Calculate swipe direction
+      const deltaX = touchEndX - touchStartX;
+      const deltaY = touchEndY - touchStartY;
+      
+      // Minimum pixels to count as a swipe
+      const minSwipeDistance = 30;
+      
+      if (Math.abs(deltaX) > Math.abs(deltaY) && Math.abs(deltaX) > minSwipeDistance) {
+        wasSwiped = true; // Mark that we detected a swipe
+        
+        if (deltaX > 0) {
+          // Swipe right - turn right
+          PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+        } else {
+          // Swipe left - turn left
+          PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+        }
       }
-    } else {
-      console.log('Not a valid swipe', {
-        deltaXTest: Math.abs(deltaX) > Math.abs(deltaY),
-        distanceTest: Math.abs(deltaX) > minSwipeDistance
-      });
-    }
-  });
+    });
     
     // Convert tap controls to use touchend instead of touchstart
     leftZone.addEventListener('touchend', function(e) {
