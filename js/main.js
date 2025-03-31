@@ -47,6 +47,11 @@ function init() {
     console.log("Initializing collision system");
     COLLISIONS.initCollisionBoxes();
   }
+
+  // Initialize ghost wireframe UI if available
+if (window.COLLISIONS && typeof COLLISIONS.initGhostWireframeUI === 'function') {
+  COLLISIONS.initGhostWireframeUI();
+}
     
     // Setup UI elements
     setupUI();
@@ -166,6 +171,14 @@ function init() {
     if (window.COLLISIONS) {
       COLLISIONS.initCollisionBoxes();
     }
+
+    // Initialize ghost wireframe UI if available
+if (window.COLLISIONS && typeof COLLISIONS.initGhostWireframeUI === 'function') {
+  COLLISIONS.initGhostWireframeUI();
+}
+
+// Make sure COLLISIONS is globally accessible
+window.COLLISIONS = COLLISIONS;
   }
   
   // Call init when the page loads
