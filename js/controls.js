@@ -94,12 +94,12 @@ function setupTouchControls() {
         // Right swipe - turn RIGHT
         console.log("Right swipe detected - turning RIGHT");
         // This turns the bike to the RIGHT
-        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+        PLAYER.direction.set(-PLAYER.direction.z, 0, -PLAYER.direction.x);
       } else {
         // Left swipe - turn LEFT
         console.log("Left swipe detected - turning LEFT");
         // This turns the bike to the LEFT
-        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+        PLAYER.direction.set(PLAYER.direction.z, 0, PLAYER.direction.x);
       }
       
       // Reset start position to prevent multiple swipes in the same gesture
