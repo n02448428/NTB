@@ -102,11 +102,11 @@ function setupTouchControls() {
       if (deltaX > 0) {
         // Right swipe - turning LEFT (swapped)
         console.log("Right swipe detected - turning LEFT");
-        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x); // RIGHT turn function
+        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x); // RIGHT turn function
       } else {
         // Left swipe - turning RIGHT (swapped)
         console.log("Left swipe detected - turning RIGHT");
-        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x); // LEFT turn function
+        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x); // LEFT turn function
       }
       
       // Reset start position to prevent multiple swipes in the same gesture
