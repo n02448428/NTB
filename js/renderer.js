@@ -50,7 +50,7 @@ function initRenderer() {
     materialsToUpdate: materialsToUpdate
   };
   
-  console.log("RENDERER initialized with scene:", scene);
+  optimizeForMobile();
 }
 
 function setupPostProcessing() {
@@ -96,6 +96,50 @@ function setupPostProcessing() {
   glitchPass.goWild = effectsConfig.wildGlitch;
   composer.addPass(glitchPass);
   effectPasses.glitch = glitchPass;
+}
+
+function optimizeForMobile() {
+  if (CONFIG.IS_MOBILE) {
+    // Reduce effects intensity on mobile
+    effectsConfig.bloom *= 0.7;
+    effectsConfig.pixel = Math.max(1, effectsConfig.pixel);
+    
+    // Disable most intensive effects
+    if (effectPasses.glitch) effectPasses.glitch.enabled = false;
+    
+    // Update UI to reflect changes
+    updateSliders();
+    
+    // Add a mobile performance mode toggle
+    addPerformanceModeToggle();
+  }
+}
+
+function addPerformanceModeToggle() {
+  const panel = document.getElementById('effectsPanel');
+  if (!panel) return;
+  
+  const toggleContainer = document.createElement('div');
+  toggleContainer.innerHTML = `
+    <div class="effect-control" style="margin-top:15px; border-top:1px solid rgba(0,255,255,0.3); padding-top:10px;">
+      <input type="checkbox" id="performanceMode" checked>
+      <label for="performanceMode">Mobile Performance Mode</label>
+    </div>
+  `;
+  
+  panel.appendChild(toggleContainer);
+  
+  document.getElementById('performanceMode').addEventListener('change', function(e) {
+    if (this.checked) {
+      // Enable performance optimizations
+      if (effectPasses.bloom) effectPasses.bloom.strength *= 0.7;
+      if (effectPasses.glitch) effectPasses.glitch.enabled = false;
+    } else {
+      // Disable performance optimizations
+      if (effectPasses.bloom) effectPasses.bloom.strength /= 0.7;
+      if (effectPasses.glitch) effectPasses.glitch.enabled = effectsConfig.glitch > 0;
+    }
+  });
 }
 
 function setupLighting() {
