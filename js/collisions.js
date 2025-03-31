@@ -1309,58 +1309,152 @@ function addGhostWireframeButton() {
     COLLISIONS.setupCKeyListener = setupCKeyListener;
   }
   
-  // Hook to check for wireframes after game restart
-  function checkForWireframesAfterRestart() {
-    // Check if we're already listening for game over events
-    if (!window.isListeningForGameOver) {
-      // Watch for restart button clicks
-      const restartButton = document.getElementById('returnToMenuButton');
-      if (restartButton) {
-        restartButton.addEventListener('click', function() {
-          // When game is restarted, check for wireframes after a delay
-          setTimeout(() => {
-            if (window.COLLISIONS && typeof COLLISIONS.addGhostWireframeButton === 'function') {
-              COLLISIONS.addGhostWireframeButton();
-            }
-          }, 1000);
-        });
-      }
-      
-      // Also check when pause overlay is shown
-      const pauseButton = document.getElementById('pauseButton');
-      if (pauseButton) {
-        pauseButton.addEventListener('click', function() {
+  // Add this function to the js/collisions.js file, after the COLLISIONS object definition
+
+// Enhanced Ghost Wireframe UI - Add after COLLISIONS object definition
+function addGhostWireframeButton() {
+  const pauseOverlay = document.getElementById('pauseOverlay');
+  const resumeButton = document.getElementById('resumeButton');
+  
+  // Check if wireframes exist (2nd game and beyond)
+  const wireframes = RENDERER.scene.children.filter(obj => 
+    obj.userData && obj.userData.isGhostWireframe);
+  
+  // Only create button if wireframes exist and button doesn't exist yet
+  if (wireframes.length > 0 && !document.getElementById('ghostWireframeButton')) {
+    const ghostButton = document.createElement('button');
+    ghostButton.id = 'ghostWireframeButton';
+    ghostButton.textContent = wireframes[0].visible ? 'GHOST FRAMES: ON' : 'GHOST FRAMES: OFF';
+    ghostButton.style.marginTop = '10px';
+    
+    ghostButton.addEventListener('click', function() {
+      toggleGhostWireframes();
+      updateGhostButtonText();
+    });
+    
+    // Insert before the resume button
+    pauseOverlay.insertBefore(ghostButton, resumeButton);
+    
+    // Add ghost wireframe info to controlsInfo for desktop users only
+    updateControlsInfo();
+    
+    // Setup key press listener for the C key 
+    setupCKeyListener();
+  }
+}
+
+// Update button text based on current wireframe visibility
+function updateGhostButtonText() {
+  const ghostButton = document.getElementById('ghostWireframeButton');
+  const wireframes = RENDERER.scene.children.filter(obj => 
+    obj.userData && obj.userData.isGhostWireframe);
+  
+  if (ghostButton && wireframes.length > 0) {
+    ghostButton.textContent = wireframes[0].visible ? 'GHOST FRAMES: ON' : 'GHOST FRAMES: OFF';
+  }
+}
+
+// Add info about ghost wireframes to the controls info for desktop users
+function updateControlsInfo() {
+  // Only add ghost frame info for desktop users
+  if (!CONFIG.IS_MOBILE) {
+    const controlsInfo = document.getElementById('controlsInfo');
+    if (controlsInfo) {
+      controlsInfo.innerHTML = `
+        <p>DESKTOP: Arrow keys to turn, R to restart, P to pause, E for effects, C to toggle ghost frames</p>
+        <p>MOBILE: Tap left/right sides or swipe left/right to turn</p>
+      `;
+    }
+  }
+}
+
+// Setup C key listener that updates the button text
+function setupCKeyListener() {
+  // Keep reference to the original keydown handler
+  const originalKeyDown = window.onKeyDown;
+  
+  // Override the C key functionality to update button text
+  window.onKeyDown = function(event) {
+    // Call original handler first
+    if (typeof originalKeyDown === 'function') {
+      originalKeyDown(event);
+    }
+    
+    // Handle C key for ghost frames
+    if (event.keyCode === 67) { // 'C' key
+      // Update button text after a short delay
+      setTimeout(updateGhostButtonText, 50);
+    }
+  };
+}
+
+// Initialize the UI enhancements
+function initGhostWireframeUI() {
+  // Add the button (will only be added if wireframes exist)
+  addGhostWireframeButton();
+}
+
+// Add these functions to the already initialized COLLISIONS object
+if (window.COLLISIONS) {
+  COLLISIONS.addGhostWireframeButton = addGhostWireframeButton;
+  COLLISIONS.updateGhostButtonText = updateGhostButtonText;
+  COLLISIONS.updateControlsInfo = updateControlsInfo;
+  COLLISIONS.initGhostWireframeUI = initGhostWireframeUI;
+  COLLISIONS.setupCKeyListener = setupCKeyListener;
+}
+
+// Hook to check for wireframes after game restart
+function checkForWireframesAfterRestart() {
+  // Check if we're already listening for game over events
+  if (!window.isListeningForGameOver) {
+    // Watch for restart button clicks
+    const restartButton = document.getElementById('returnToMenuButton');
+    if (restartButton) {
+      restartButton.addEventListener('click', function() {
+        // When game is restarted, check for wireframes after a delay
+        setTimeout(() => {
           if (window.COLLISIONS && typeof COLLISIONS.addGhostWireframeButton === 'function') {
             COLLISIONS.addGhostWireframeButton();
           }
-        });
-      }
-      
-      window.isListeningForGameOver = true;
+        }, 1000);
+      });
     }
-  }
-  
-  // Call this instead of modifying the originalGameOver
-  checkForWireframesAfterRestart();
-  
-  // Set up a MutationObserver to watch for wireframes being added to the scene
-  function watchForWireframes() {
-    // Check if wireframes appear after some time
-    const checkInterval = setInterval(() => {
-      const wireframes = RENDERER.scene.children.filter(obj => 
-        obj.userData && obj.userData.isGhostWireframe);
-      
-      if (wireframes.length > 0) {
-        addGhostWireframeButton();
-        clearInterval(checkInterval);
-      }
-    }, 1000);
     
-    // Stop checking after 15 seconds
-    setTimeout(() => {
-      clearInterval(checkInterval);
-    }, 15000);
+    // Also check when pause overlay is shown
+    const pauseButton = document.getElementById('pauseButton');
+    if (pauseButton) {
+      pauseButton.addEventListener('click', function() {
+        if (window.COLLISIONS && typeof COLLISIONS.addGhostWireframeButton === 'function') {
+          COLLISIONS.addGhostWireframeButton();
+        }
+      });
+    }
+    
+    window.isListeningForGameOver = true;
   }
+}
+
+// Call this instead of modifying the originalGameOver
+checkForWireframesAfterRestart();
+
+// Set up a MutationObserver to watch for wireframes being added to the scene
+function watchForWireframes() {
+  // Check if wireframes appear after some time
+  const checkInterval = setInterval(() => {
+    const wireframes = RENDERER.scene.children.filter(obj => 
+      obj.userData && obj.userData.isGhostWireframe);
+    
+    if (wireframes.length > 0) {
+      addGhostWireframeButton();
+      clearInterval(checkInterval);
+    }
+  }, 1000);
   
-  // Start watching for wireframes
-  watchForWireframes();
+  // Stop checking after 15 seconds
+  setTimeout(() => {
+    clearInterval(checkInterval);
+  }, 15000);
+}
+
+// Start watching for wireframes
+watchForWireframes();
