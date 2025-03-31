@@ -122,11 +122,11 @@ function setupTouchControls() {
       if (touchX < halfWidth) {
         // Left side tapped
         console.log("Left tap detected");
-        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
       } else {
         // Right side tapped
         console.log("Right tap detected");
-        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
       }
     }
   }, { passive: false });
