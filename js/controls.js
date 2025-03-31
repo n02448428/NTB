@@ -93,11 +93,11 @@ function setupTouchControls() {
       if (deltaX > 0) {
         // Right swipe
         console.log("Right swipe detected, distance:", touchMoveDistance);
-        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
       } else {
         // Left swipe
         console.log("Left swipe detected, distance:", touchMoveDistance);
-        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
       }
       
       // Reset start position to prevent multiple swipes in the same gesture
@@ -122,11 +122,11 @@ function setupTouchControls() {
       if (touchX < halfWidth) {
         // Left side tapped
         console.log("Left tap detected");
-        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
+        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
       } else {
         // Right side tapped
         console.log("Right tap detected");
-        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
+        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
       }
     }
   }, { passive: false });
