@@ -1,4 +1,4 @@
-/* Improved Swipe Controls with Better Separation from Taps */
+/* ------------------ GAME CONTROLS ------------------ */
 
 function setupControls() {
   // Keyboard controls
@@ -54,6 +54,8 @@ function setupTouchControls() {
   let touchStartY = 0;
   let isSwiping = false;
   let touchMoveDistance = 0;
+  let lastSwipeTime = 0;
+  const SWIPE_COOLDOWN = 300; // milliseconds
   
   // To track if a touch is being processed as a swipe
   const SWIPE_THRESHOLD = 50; // Pixels
@@ -87,18 +89,25 @@ function setupTouchControls() {
     
     // If moved far enough and mostly horizontal, mark as swiping
     if (touchMoveDistance > SWIPE_THRESHOLD && Math.abs(deltaX) > Math.abs(deltaY)) {
+      // Check if we're still in cooldown
+      const now = Date.now();
+      if (now - lastSwipeTime < SWIPE_COOLDOWN) {
+        return;
+      }
+      
       isSwiping = true;
+      lastSwipeTime = now;
       
       // Process the swipe immediately for better responsiveness
       if (deltaX > 0) {
-        // Right swipe
-        console.log("Right swipe detected - turning RIGHT");
-        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x); // LEFT turn function
-    } else {
-        // Left swipe
-        console.log("Left swipe detected - turning LEFT");
+        // Right swipe - turning LEFT (swapped)
+        console.log("Right swipe detected - turning LEFT");
         PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x); // RIGHT turn function
-    }
+      } else {
+        // Left swipe - turning RIGHT (swapped)
+        console.log("Left swipe detected - turning RIGHT");
+        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x); // LEFT turn function
+      }
       
       // Reset start position to prevent multiple swipes in the same gesture
       touchStartX = touchX;
@@ -180,7 +189,7 @@ function setupTouchControls() {
   if (controlsInfo) {
     controlsInfo.innerHTML = `
       <p>DESKTOP: Arrow keys to turn, R to restart, P to pause, E for effects</p>
-      <p>MOBILE: Tap left/right sides or swipe left/right to turn</p>
+      <p>MOBILE: Tap left/right sides or swipe left/right to turn (Swipe RIGHT = turn LEFT)</p>
     `;
   }
 }
