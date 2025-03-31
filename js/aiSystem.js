@@ -30,7 +30,6 @@ const AI = {
       originalRotation: new THREE.Euler(0, 0, 0),
       targetTilt: 0,
       currentTilt: 0,
-      // Individual AI characteristics that evolve
       characteristics: {
         avoidDistance: AI.knowledgeBase.avoidDistance + (Math.random() - 0.5) * 5,
         powerupWeight: AI.knowledgeBase.powerupWeight + (Math.random() - 0.5) * 10,
@@ -40,6 +39,75 @@ const AI = {
       }
     };
   
+    // Create temporary bike first so something is visible immediately
+    createDefaultAIBike(aiBike, aiColor);
+    
+    // Now start loading the custom model if the loader exists
+    if (typeof THREE.GLTFLoader === 'function') {
+      const loader = new THREE.GLTFLoader();
+      
+      // Use try-catch to handle potential loading issues
+      try {
+        loader.load(
+          'models/custom_bike.glb',
+          function(gltf) {
+            console.log("AI bike model loaded successfully");
+            
+            // Remove existing temporary parts
+            for (let i = aiBike.children.length - 1; i >= 0; i--) {
+              const child = aiBike.children[i];
+              if (child.type === 'Mesh') {
+                aiBike.remove(child);
+              }
+            }
+            
+            // Clone the model so each AI has their own instance
+            const bikeModel = gltf.scene.clone();
+            
+            // Apply the same scale and rotation as player bike
+            bikeModel.scale.set(10, 10, 10); // Your specified values
+            bikeModel.rotation.y = Math.PI;  // Your specified rotation
+            
+            // Add model to the AI bike
+            aiBike.add(bikeModel);
+            
+            // Apply AI color to all model parts
+            bikeModel.traverse(function(child) {
+              if (child.isMesh && child.material) {
+                // Clone material to avoid affecting other bikes
+                child.material = child.material.clone();
+                child.material.color.set(aiColor);
+                child.material.emissive.set(aiColor);
+                child.material.emissiveIntensity = 0.8 + (RENDERER.effectsConfig.master * 0.3);
+              }
+            });
+          },
+          undefined, // Progress callback
+          function(error) {
+            console.error("Error loading AI bike model:", error);
+            // Default bike remains if loading fails
+          }
+        );
+      } catch (e) {
+        console.error("Exception loading AI bike model:", e);
+      }
+    } else {
+      console.warn("THREE.GLTFLoader not found, using default AI bike");
+    }
+  
+    // Position the AI bike
+    const startOffset = aiIndex * 20;
+    aiBike.position.set(CONFIG.WORLD_SIZE / 4, 3, startOffset - (AI.bikes.length * 10));
+    RENDERER.scene.add(aiBike);
+  
+    AI.bikes.push(aiBike);
+    updateAICounter();
+  
+    return aiBike;
+  }
+  
+  // Create a temporary/default AI bike (similar to the original implementation)
+  function createDefaultAIBike(aiBike, aiColor) {
     const bikeBodyMaterial = new THREE.MeshPhongMaterial({
       color: aiColor,
       emissive: aiColor,
@@ -47,7 +115,7 @@ const AI = {
       shininess: 30
     });
   
-    // Main body and parts - same structure as player bike
+    // Main body and parts
     const parts = [
       // Main body
       { geo: new THREE.BoxGeometry(4, 6, 0.5), pos: [0, 0, 0], mat: bikeBodyMaterial },
@@ -106,16 +174,6 @@ const AI = {
     );
     frontLight.position.set(2.5, 0, 0);
     aiBike.add(frontLight);
-  
-    // Randomize starting position
-    const startOffset = aiIndex * 20;
-    aiBike.position.set(CONFIG.WORLD_SIZE / 4, 3, startOffset - (AI.bikes.length * 10));
-    RENDERER.scene.add(aiBike);
-  
-    AI.bikes.push(aiBike);
-    updateAICounter();
-  
-    return aiBike;
   }
   
   function addAITrail(aiBike) {
