@@ -42,7 +42,7 @@ function onKeyDown(event) {
 }
 
 function setupTouchControls() {
-  console.log("Setting up touch controls with improved swipe detection");
+  console.log("Setting up touch controls with intuitive swipe direction");
   
   // Get the elements we need
   const leftZone = document.getElementById('leftTouchZone');
@@ -100,13 +100,13 @@ function setupTouchControls() {
       
       // Process the swipe immediately for better responsiveness
       if (deltaX > 0) {
-        // Right swipe - turning LEFT (swapped)
-        console.log("Right swipe detected - turning LEFT");
-        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x); // RIGHT turn function
+        // Right swipe - turning RIGHT (swiping from left to right)
+        console.log("Right swipe detected - turning RIGHT");
+        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x);
       } else {
-        // Left swipe - turning RIGHT (swapped)
-        console.log("Left swipe detected - turning RIGHT");
-        PLAYER.direction.set(-PLAYER.direction.z, 0, PLAYER.direction.x); // LEFT turn function
+        // Left swipe - turning LEFT (swiping from right to left)
+        console.log("Left swipe detected - turning LEFT");
+        PLAYER.direction.set(PLAYER.direction.z, 0, -PLAYER.direction.x);
       }
       
       // Reset start position to prevent multiple swipes in the same gesture
@@ -189,7 +189,7 @@ function setupTouchControls() {
   if (controlsInfo) {
     controlsInfo.innerHTML = `
       <p>DESKTOP: Arrow keys to turn, R to restart, P to pause, E for effects</p>
-      <p>MOBILE: Tap left/right sides or swipe left/right to turn (Swipe RIGHT = turn LEFT)</p>
+      <p>MOBILE: Tap left/right sides or swipe left/right to turn</p>
     `;
   }
 }
