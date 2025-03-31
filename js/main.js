@@ -9,15 +9,21 @@ const GAME = {
   
 // Initialize the game
 function init() {
-  console.log("Game initialization starting");
+  // Request higher frame rate on mobile devices that support it
+  if ('setHighFrameRateMode' in window) {
+    window.setHighFrameRateMode(true);
+  }
+  
+  // For iOS devices
+  if (document.documentElement.requestFullscreen) {
+    document.documentElement.requestFullscreen();
+  }
   
   // Make sure the renderer is initialized first
   if (!window.RENDERER || !window.RENDERER.scene) {
     console.log("Initializing renderer first");
     RENDERER.initRenderer();
   }
-  
-  console.log("RENDERER initialized, scene created:", RENDERER.scene);
   
   // Initialize world
   try {
