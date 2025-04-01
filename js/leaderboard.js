@@ -2,10 +2,10 @@
 
 function setupOnlineLeaderboard() {
   // Your Google Apps Script Web App URL (you'll get this after deployment)
-  const LEADERBOARD_API_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vTluYzznMqhldGjgshkFvp3A5VfNOiavIo2dFyMnudNRhT81krpTcNydja6d0Q3GDxsnl00-nHhYuqE/pub?output=csv';
+  const LEADERBOARD_API_URL = 'https://script.google.com/macros/s/YOUR_SCRIPT_ID_HERE/exec';
   
   // Security key (should match what you set in your Google Apps Script)
-  const API_KEY = 'dam-9789';
+  const API_KEY = 'your-secret-key-here';
   
   // Leaderboard state
   let leaderboardData = [];
