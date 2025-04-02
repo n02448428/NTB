@@ -1,79 +1,8 @@
 /* ------------------ UI MANAGEMENT ------------------ */
 
-// Define these functions first, before they're used
-function showLeaderboard() {
-  // Check if online leaderboard function is available
-  if (typeof window.onlineShowLeaderboard === 'function') {
-    window.onlineShowLeaderboard();
-    return;
-  }
-
-  // Fallback to local leaderboard
-  const leaderboard = getLeaderboard();
-  const leaderboardBody = document.getElementById('leaderboardBody');
-  leaderboardBody.innerHTML = '';
-
-  if (leaderboard.length === 0) {
-    const row = document.createElement('tr');
-    row.innerHTML = '<td colspan="4">No scores yet</td>';
-    leaderboardBody.appendChild(row);
-  } else {
-    leaderboard.sort((a, b) => b.score - a.score);
-
-    for (let i = 0; i < Math.min(10, leaderboard.length); i++) {
-      const entry = leaderboard[i];
-      const row = document.createElement('tr');
-
-      row.innerHTML = `
-        <td>${i + 1}</td>
-        <td>${entry.name}</td>
-        <td>${entry.score}</td>
-        <td>${UTILS.formatDate(entry.date)}</td>
-      `;
-
-      leaderboardBody.appendChild(row);
-    }
-  }
-
-  document.getElementById('leaderboardPanel').style.display = 'block';
-}
-
-function hideLeaderboard() {
-  document.getElementById('leaderboardPanel').style.display = 'none';
-}
-
-function getLeaderboard() {
-  return JSON.parse(localStorage.getItem('neonTrailblazerLeaderboard') || '[]');
-}
-
-function addToLeaderboard(name, score) {
-  // Try to use online leaderboard if available
-  if (typeof window.onlineAddToLeaderboard === 'function') {
-    window.onlineAddToLeaderboard(name, score);
-    return;
-  }
-
-  // Fallback to local leaderboard
-  const leaderboard = getLeaderboard();
-  leaderboard.push({
-    name: name,
-    score: score,
-    date: new Date().toISOString()
-  });
-
-  leaderboard.sort((a, b) => b.score - a.score);
-  const limitedLeaderboard = leaderboard.slice(0, 50);
-
-  localStorage.setItem('neonTrailblazerLeaderboard', JSON.stringify(limitedLeaderboard));
-}
-
-let playerName = '';
-
 function setupUI() {
   // Setup splash screen
   document.getElementById('startButton').addEventListener('click', startGame);
-  document.getElementById('leaderboardButton').addEventListener('click', showLeaderboard);
-  document.getElementById('closeLeaderboard').addEventListener('click', hideLeaderboard);
   document.getElementById('returnToMenuButton').addEventListener('click', GAME.restartGame);
 
   // Load saved player name if exists
@@ -126,9 +55,6 @@ function gameOver(message) {
 
   // Make player name available to other scripts
   window.playerName = playerName;
-  
-  // Save the score to leaderboard
-  addToLeaderboard(playerName, PLAYER.score);
 
   // Show game over screen
   document.getElementById('gameOver').style.display = 'block';
