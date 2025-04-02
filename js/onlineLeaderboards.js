@@ -16,7 +16,8 @@ async function saveScoreToLeaderboard(name, score) {
     // Create the data to send
     const scoreData = {
       name: name,
-      score: score
+      score: score,
+      apiKey: 'dam-9789' // Must match the key in the API endpoint
     };
     
     // Send score to Vercel API endpoint
