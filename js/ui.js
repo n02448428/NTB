@@ -1,5 +1,72 @@
 /* ------------------ UI MANAGEMENT ------------------ */
 
+// Define these functions first, before they're used
+function showLeaderboard() {
+  // Check if online leaderboard function is available
+  if (typeof window.onlineShowLeaderboard === 'function') {
+    window.onlineShowLeaderboard();
+    return;
+  }
+
+  // Fallback to local leaderboard
+  const leaderboard = getLeaderboard();
+  const leaderboardBody = document.getElementById('leaderboardBody');
+  leaderboardBody.innerHTML = '';
+
+  if (leaderboard.length === 0) {
+    const row = document.createElement('tr');
+    row.innerHTML = '<td colspan="4">No scores yet</td>';
+    leaderboardBody.appendChild(row);
+  } else {
+    leaderboard.sort((a, b) => b.score - a.score);
+
+    for (let i = 0; i < Math.min(10, leaderboard.length); i++) {
+      const entry = leaderboard[i];
+      const row = document.createElement('tr');
+
+      row.innerHTML = `
+        <td>${i + 1}</td>
+        <td>${entry.name}</td>
+        <td>${entry.score}</td>
+        <td>${UTILS.formatDate(entry.date)}</td>
+      `;
+
+      leaderboardBody.appendChild(row);
+    }
+  }
+
+  document.getElementById('leaderboardPanel').style.display = 'block';
+}
+
+function hideLeaderboard() {
+  document.getElementById('leaderboardPanel').style.display = 'none';
+}
+
+function getLeaderboard() {
+  return JSON.parse(localStorage.getItem('neonTrailblazerLeaderboard') || '[]');
+}
+
+function addToLeaderboard(name, score) {
+  // Try to use online leaderboard if available
+  if (typeof window.onlineAddToLeaderboard === 'function') {
+    window.onlineAddToLeaderboard(name, score);
+    return;
+  }
+
+  // Fallback to local leaderboard
+  const leaderboard = getLeaderboard();
+  leaderboard.push({
+    name: name,
+    score: score,
+    date: new Date().toISOString()
+  });
+
+  leaderboard.sort((a, b) => b.score - a.score);
+  const limitedLeaderboard = leaderboard.slice(0, 50);
+
+  localStorage.setItem('neonTrailblazerLeaderboard', JSON.stringify(limitedLeaderboard));
+}
+
 let playerName = '';
 
 function setupUI() {
@@ -57,29 +124,14 @@ function gameOver(message) {
   document.getElementById('gameOverMessage').textContent = message;
   document.getElementById('finalScore').textContent = 'SCORE: ' + PLAYER.score;
 
-  // Save the score to leaderboard - use try/catch to handle API errors
-  try {
-    addToLeaderboard(playerName, PLAYER.score);
-  } catch (e) {
-    console.error("Error saving score to leaderboard:", e);
-    // Continue with game over even if leaderboard fails
-  }
+  // Make player name available to other scripts
+  window.playerName = playerName;
+  
+  // Save the score to leaderboard
+  addToLeaderboard(playerName, PLAYER.score);
 
   // Show game over screen
   document.getElementById('gameOver').style.display = 'block';
-}
-
-// Update this function to properly reset the game
-function showSplashScreen() {
-  document.getElementById('splashScreen').style.display = 'flex';
-  
-  // Ensure the game is completely stopped
-  CONFIG.STATE.gameStarted = false;
-  
-  // Show preview if available
-  if (typeof PREVIEW !== 'undefined' && PREVIEW.showSplashPreview) {
-    PREVIEW.showSplashPreview();
-  }
 }
 
 function updateTouchControlsDisplay() {
@@ -100,70 +152,71 @@ function updateTouchControlsDisplay() {
   }
 }
 
-// Add this to the end of ui.js
-
 // Direct approach to fix EFX button and E key toggle on all screens
 (function() {
-  // Fix the effects panel z-index immediately
-  const effectsPanel = document.getElementById('effectsPanel');
-  if (effectsPanel) {
-    // Set a very high z-index to ensure it's above everything
-    effectsPanel.style.zIndex = '10001'; // Higher than splash and game over screens
-  }
-  
-  // Clone and replace the toggle button to remove old event listeners
-  const toggleEffectsButton = document.getElementById('toggleEffectsButton');
-  if (toggleEffectsButton) {
-    // Set a very high z-index for the button
-    toggleEffectsButton.style.zIndex = '10001';
-    
-    // Replace with cloned button to remove old listeners
-    const newToggleButton = toggleEffectsButton.cloneNode(true);
-    toggleEffectsButton.parentNode.replaceChild(newToggleButton, toggleEffectsButton);
-    
-    // Add new click handler
-    newToggleButton.addEventListener('click', function(e) {
-      if (effectsPanel) {
-        effectsPanel.style.display = effectsPanel.style.display === 'block' ? 'none' : 'block';
-        if (effectsPanel.style.display === 'block') {
-          document.documentElement.style.setProperty('--effect-badge-display', 'none');
-          localStorage.setItem('neonTrailblazerEffectsOpened', 'true');
-        }
-      }
-      e.stopPropagation();
-    });
-  }
-  
-  // Make credit text clickable immediately
-  const creditText = document.getElementById('creditText');
-  if (creditText) {
-    creditText.style.zIndex = '10001'; // Very high z-index
-    creditText.innerHTML = '<a id="creditTextLink" href="https://twitter.com/dmitrymakelove" target="_blank">made by <span style="color:#ff00ff;">@dmitrymakelove</span><br>(follow on X)</a>';
-    
-    const link = document.getElementById('creditTextLink');
-    if (link) {
-      link.style.pointerEvents = 'auto';
-      link.style.color = 'inherit';
-      link.style.textDecoration = 'none';
+  // Wait until DOM is loaded
+  document.addEventListener('DOMContentLoaded', function() {
+    // Fix the effects panel z-index immediately
+    const effectsPanel = document.getElementById('effectsPanel');
+    if (effectsPanel) {
+      // Set a very high z-index to ensure it's above everything
+      effectsPanel.style.zIndex = '10001'; // Higher than splash and game over screens
     }
-  }
-  
-  // Add a global key listener for E key that works on all screens
-  window.addEventListener('keydown', function(e) {
-    if (e.key === 'e' || e.key === 'E') {
-      if (effectsPanel) {
-        effectsPanel.style.display = effectsPanel.style.display === 'block' ? 'none' : 'block';
-        if (effectsPanel.style.display === 'block') {
-          document.documentElement.style.setProperty('--effect-badge-display', 'none');
-          localStorage.setItem('neonTrailblazerEffectsOpened', 'true');
+    
+    // Clone and replace the toggle button to remove old event listeners
+    const toggleEffectsButton = document.getElementById('toggleEffectsButton');
+    if (toggleEffectsButton) {
+      // Set a very high z-index for the button
+      toggleEffectsButton.style.zIndex = '10001';
+      
+      // Replace with cloned button to remove old listeners
+      const newToggleButton = toggleEffectsButton.cloneNode(true);
+      toggleEffectsButton.parentNode.replaceChild(newToggleButton, toggleEffectsButton);
+      
+      // Add new click handler
+      newToggleButton.addEventListener('click', function(e) {
+        if (effectsPanel) {
+          effectsPanel.style.display = effectsPanel.style.display === 'block' ? 'none' : 'block';
+          if (effectsPanel.style.display === 'block') {
+            document.documentElement.style.setProperty('--effect-badge-display', 'none');
+            localStorage.setItem('neonTrailblazerEffectsOpened', 'true');
+          }
         }
+        e.stopPropagation();
+      });
+    }
+    
+    // Make credit text clickable immediately
+    const creditText = document.getElementById('creditText');
+    if (creditText) {
+      creditText.style.zIndex = '10001'; // Very high z-index
+      creditText.innerHTML = '<a id="creditTextLink" href="https://twitter.com/dmitrymakelove" target="_blank">made by <span style="color:#ff00ff;">@dmitrymakelove</span><br>(follow on X)</a>';
+      
+      const link = document.getElementById('creditTextLink');
+      if (link) {
+        link.style.pointerEvents = 'auto';
+        link.style.color = 'inherit';
+        link.style.textDecoration = 'none';
       }
     }
-  }, true); // Use capturing phase
-  
-  // Set badge display based on saved preference
-  const hasOpenedEffects = localStorage.getItem('neonTrailblazerEffectsOpened') === 'true';
-  document.documentElement.style.setProperty('--effect-badge-display', hasOpenedEffects ? 'none' : 'block');
+    
+    // Add a global key listener for E key that works on all screens
+    window.addEventListener('keydown', function(e) {
+      if (e.key === 'e' || e.key === 'E') {
+        if (effectsPanel) {
+          effectsPanel.style.display = effectsPanel.style.display === 'block' ? 'none' : 'block';
+          if (effectsPanel.style.display === 'block') {
+            document.documentElement.style.setProperty('--effect-badge-display', 'none');
+            localStorage.setItem('neonTrailblazerEffectsOpened', 'true');
+          }
+        }
+      }
+    }, true); // Use capturing phase
+    
+    // Set badge display based on saved preference
+    const hasOpenedEffects = localStorage.getItem('neonTrailblazerEffectsOpened') === 'true';
+    document.documentElement.style.setProperty('--effect-badge-display', hasOpenedEffects ? 'none' : 'block');
+  });
 })();
 
 // Also add these fixes to the window load event to ensure they work after the game is fully loaded
@@ -183,113 +236,65 @@ window.addEventListener('load', function() {
 
 // Enhanced clickable credit text
 document.addEventListener('DOMContentLoaded', function() {
-  const creditText = document.getElementById('creditText');
-  if (creditText) {
-    // Make the entire area clickable
-    creditText.innerHTML = '<a id="creditTextLink" href="https://twitter.com/dmitrymakelove" target="_blank" style="display:block;text-decoration:none;color:inherit">made by <span style="color:#ff00ff;">@dmitrymakelove</span><br>(follow on X)</a>';
-  }
-});
-
-document.addEventListener('DOMContentLoaded', function() {
-  // Get the credit text element
-  const creditText = document.getElementById('creditText');
-  if (creditText) {
-    // Save original content in case we need to modify it
-    const originalContent = creditText.innerHTML;
-    
-    // Completely replace with a new structure
-    creditText.innerHTML = '';
-    
-    // Create a full-size anchor element
-    const anchor = document.createElement('a');
-    anchor.id = 'creditTextLink';
-    anchor.href = 'https://twitter.com/dmitrymakelove';
-    anchor.target = '_blank';
-    anchor.innerHTML = 'made by <span style="color:#ff00ff;">@dmitrymakelove</span><br>(follow on X)';
-    
-    // Style the anchor to fill the entire container
-    anchor.style.display = 'block';
-    anchor.style.width = '100%';
-    anchor.style.height = '100%';
-    anchor.style.textDecoration = 'none';
-    anchor.style.color = 'inherit';
-    anchor.style.padding = 'inherit';
-    
-    // Add it to the container
-    creditText.appendChild(anchor);
-  }
+  setTimeout(function() {
+    const creditText = document.getElementById('creditText');
+    if (creditText) {
+      // Make the entire area clickable
+      creditText.innerHTML = '<a id="creditTextLink" href="https://twitter.com/dmitrymakelove" target="_blank" style="display:block;text-decoration:none;color:inherit">made by <span style="color:#ff00ff;">@dmitrymakelove</span><br>(follow on X)</a>';
+    }
+  }, 1000);
 });
 
 // Fix for making the credit text fully clickable and EFX notification
 document.addEventListener('DOMContentLoaded', function() {
-  // Fix for the credit text in bottom left
-  const creditText = document.getElementById('creditText');
-  if (creditText) {
-    // Make the entire container clickable by setting it as a link
-    creditText.innerHTML = '';
-    creditText.style.cursor = 'pointer';
-    creditText.style.pointerEvents = 'auto';
-    
-    // Create a full-width and height anchor element
-    const anchor = document.createElement('a');
-    anchor.id = 'creditTextLink';
-    anchor.href = 'https://twitter.com/dmitrymakelove';
-    anchor.target = '_blank';
-    anchor.innerHTML = 'made by <span style="color:#ff00ff;">@dmitrymakelove</span><br>(follow on X)';
-    
-    // Style the anchor to fill the entire creditText container
-    anchor.style.display = 'block';
-    anchor.style.width = '100%';
-    anchor.style.height = '100%';
-    anchor.style.textDecoration = 'none';
-    anchor.style.color = 'inherit';
-    anchor.style.padding = '5px 10px';
-    
-    // Add the anchor to the container
-    creditText.appendChild(anchor);
-    
-    // Make sure it has high z-index to be clickable over other elements
-    creditText.style.zIndex = '10001';
-  }
-  
-  // Fix for the EFX button notification
-  const toggleEffectsButton = document.getElementById('toggleEffectsButton');
-  if (toggleEffectsButton) {
-    // Clear any immediate handlers that might be affecting the button
-    const newButton = toggleEffectsButton.cloneNode(true);
-    if (toggleEffectsButton.parentNode) {
-      toggleEffectsButton.parentNode.replaceChild(newButton, toggleEffectsButton);
+  setTimeout(function() {
+    // Fix for the credit text in bottom left
+    const creditText = document.getElementById('creditText');
+    if (creditText) {
+      // Make the entire container clickable by setting it as a link
+      creditText.innerHTML = '';
+      creditText.style.cursor = 'pointer';
+      creditText.style.pointerEvents = 'auto';
+      
+      // Create a full-width and height anchor element
+      const anchor = document.createElement('a');
+      anchor.id = 'creditTextLink';
+      anchor.href = 'https://twitter.com/dmitrymakelove';
+      anchor.target = '_blank';
+      anchor.innerHTML = 'made by <span style="color:#ff00ff;">@dmitrymakelove</span><br>(follow on X)';
+      
+      // Style the anchor to fill the entire creditText container
+      anchor.style.display = 'block';
+      anchor.style.width = '100%';
+      anchor.style.height = '100%';
+      anchor.style.textDecoration = 'none';
+      anchor.style.color = 'inherit';
+      anchor.style.padding = '5px 10px';
+      
+      // Add the anchor to the container
+      creditText.appendChild(anchor);
+      
+      // Make sure it has high z-index to be clickable over other elements
+      creditText.style.zIndex = '10001';
     }
     
-    // Create a click handler that hides the notification ONLY when clicked
-    newButton.addEventListener('click', function() {
-      // Store in localStorage that user clicked the button
-      localStorage.setItem('neonTrailblazerEffectsOpened', 'true');
+    // Fix for the EFX button notification
+    const toggleEffectsButton = document.getElementById('toggleEffectsButton');
+    if (toggleEffectsButton) {
+      // Check localStorage to see if button was clicked before
+      const wasButtonClickedBefore = localStorage.getItem('neonTrailblazerEffectsOpened') === 'true';
       
-      // Hide the notification badge
-      document.documentElement.style.setProperty('--effect-badge-display', 'none');
-      newButton.classList.add('notification-hidden');
-      
-      // Also make sure the effects panel is opened
-      const effectsPanel = document.getElementById('effectsPanel');
-      if (effectsPanel) {
-        effectsPanel.style.display = 'block';
+      if (wasButtonClickedBefore) {
+        // User clicked button in a previous session, so hide notification
+        document.documentElement.style.setProperty('--effect-badge-display', 'none');
+        toggleEffectsButton.classList.add('notification-hidden');
+      } else {
+        // User hasn't clicked button yet, so show notification
+        document.documentElement.style.setProperty('--effect-badge-display', 'block');
+        toggleEffectsButton.classList.remove('notification-hidden');
       }
-    });
-    
-    // Check localStorage to see if button was clicked before
-    const wasButtonClickedBefore = localStorage.getItem('neonTrailblazerEffectsOpened') === 'true';
-    
-    if (wasButtonClickedBefore) {
-      // User clicked button in a previous session, so hide notification
-      document.documentElement.style.setProperty('--effect-badge-display', 'none');
-      newButton.classList.add('notification-hidden');
-    } else {
-      // User hasn't clicked button yet, so show notification
-      document.documentElement.style.setProperty('--effect-badge-display', 'block');
-      newButton.classList.remove('notification-hidden');
     }
-  }
+  }, 1000);
 });
 
 // Add direct CSS to make sure our styles are applied
