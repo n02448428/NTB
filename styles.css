@@ -77,8 +77,7 @@
     text-shadow: 0 0 5px #0ff;
   }
   
-  #startButton,
-  #leaderboardButton {
+  #startButton {
     margin-top: 30px;
     background: transparent;
     border: 2px solid #0ff;
@@ -92,14 +91,7 @@
     box-shadow: 0 0 10px rgba(0, 255, 255, 0.5);
   }
   
-  #leaderboardButton {
-    margin-top: 15px;
-    padding: 10px 30px;
-    font-size: 18px;
-  }
-  
-  #startButton:hover,
-  #leaderboardButton:hover {
+  #startButton:hover{
     background: rgba(0, 255, 255, 0.2);
   }
   
@@ -173,51 +165,7 @@
   button:hover {
     background: rgba(0, 255, 255, 0.2);
   }
-  
-  #leaderboardPanel {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background: rgba(0, 0, 0, 0.9);
-    border: 2px solid #0ff;
-    color: #0ff;
-    padding: 20px;
-    width: 90%;
-    max-width: 500px;
-    max-height: 80vh;
-    overflow-y: auto;
-    z-index: 1001;
-    display: none;
-    text-align: center;
-  }
-  
-  #leaderboardPanel h2 {
-    margin-bottom: 20px;
-    text-shadow: 0 0 5px #0ff;
-  }
-  
-  #leaderboardTable {
-    width: 100%;
-    border-collapse: collapse;
-    margin-bottom: 20px;
-  }
-  
-  #leaderboardTable th,
-  #leaderboardTable td {
-    padding: 8px;
-    text-align: center;
-    border-bottom: 1px solid rgba(0, 255, 255, 0.3);
-  }
-  
-  #leaderboardTable th {
-    border-bottom: 2px solid #0ff;
-  }
-  
-  #leaderboardTable tr:nth-child(even) {
-    background: rgba(0, 255, 255, 0.1);
-  }
-  
+
   #toggleEffectsButton,
   #pauseButton {
     position: fixed;
@@ -447,12 +395,12 @@
     text-shadow: 0 0 20px #0ff, 0 0 40px #0ff !important;
   }
   
-  #startButton, #leaderboardButton, #toggleMusicButton {
+  #startButton, #toggleMusicButton {
     background: rgba(0, 0, 0, 0.5) !important;
     box-shadow: 0 0 20px rgba(0, 255, 255, 0.7) !important;
   }
   
-  #startButton:hover, #leaderboardButton:hover, #toggleMusicButton:hover {
+  #startButton:hover, #toggleMusicButton:hover {
     background: rgba(0, 255, 255, 0.3) !important;
   }
   
