@@ -68,14 +68,6 @@ if (window.COLLISIONS && typeof COLLISIONS.initGhostWireframeUI === 'function') 
     // Setup music
     setupMusicControls();
     
-    // Setup online leaderboard with safety check:
-if (typeof setupOnlineLeaderboard === 'function') {
-  setupOnlineLeaderboard();
-} else {
-  console.warn("setupOnlineLeaderboard function not found, using default leaderboard");
-  // Fallback to default leaderboard if needed
-}
-    
     // Setup controls
     setupControls();
     
