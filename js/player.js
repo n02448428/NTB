@@ -8,6 +8,8 @@ const PLAYER = {
     tailLength: 5,
     score: 0
   };
+
+  const trailSegmentPool = [];
   
   function createPlayerBike() {
     // Create an empty group for the bike
@@ -139,26 +141,43 @@ const PLAYER = {
   
   function addPlayerTrail() {
     const playerColor = new THREE.Color(RENDERER.effectsConfig.playerColor);
-    const geometry = new THREE.BoxGeometry(2, 6, 0.5);
-    const material = new THREE.MeshPhongMaterial({
-      color: playerColor,
-      emissive: playerColor,
-      emissiveIntensity: 0.7 + (RENDERER.effectsConfig.master * 0.3),
-      transparent: true,
-      opacity: 0.8
-    });
-    const segment = new THREE.Mesh(geometry, material);
+    
+    // Get segment from pool or create new
+    let segment;
+    if (trailSegmentPool.length > 0) {
+      segment = trailSegmentPool.pop();
+      // Update material color
+      segment.material.color.set(playerColor);
+      segment.material.emissive.set(playerColor);
+      segment.material.emissiveIntensity = 0.7 + (RENDERER.effectsConfig.master * 0.3);
+      // Make visible again
+      segment.visible = true;
+    } else {
+      // Create new if pool empty
+      const geometry = new THREE.BoxGeometry(2, 6, 0.5);
+      const material = new THREE.MeshPhongMaterial({
+        color: playerColor,
+        emissive: playerColor,
+        emissiveIntensity: 0.7 + (RENDERER.effectsConfig.master * 0.3),
+        transparent: true,
+        opacity: 0.8
+      });
+      segment = new THREE.Mesh(geometry, material);
+    }
+    
     segment.position.copy(PLAYER.bike.position);
-  
     segment.rotation.y = Math.atan2(PLAYER.direction.z, PLAYER.direction.x);
-    segment.rotation.z = PLAYER.bike.rotation.z; // Match bike tilt
-  
+    segment.rotation.z = PLAYER.bike.rotation.z;
+    
     RENDERER.scene.add(segment);
-  
+    
     PLAYER.trail.push({ mesh: segment, time: RENDERER.clock.getElapsedTime() });
     if (PLAYER.trail.length > PLAYER.tailLength) {
       const oldest = PLAYER.trail.shift();
       RENDERER.scene.remove(oldest.mesh);
+      // Instead of removing, return to pool
+      oldest.mesh.visible = false;
+      trailSegmentPool.push(oldest.mesh);
     }
   }
   
