@@ -958,101 +958,65 @@ function checkBoxTetrahedronCollision(box, tetrahedron) {
   }
   
   // Main collision detection function called each frame
-  function updateCollisions() {
-    // Update dynamic collision boxes and spatial grid
+  // In updateCollisions function (collisions.js)
+function updateCollisions() {
+  // Only update dynamic collision boxes at a lower frequency on mobile
+  if (!CONFIG.IS_MOBILE || RENDERER.clock.getElapsedTime() % 2 < 1) {
     updateDynamicCollisionBoxes();
-    
-    // Check player collisions
-    const playerCollision = checkPlayerCollisions();
-    if (playerCollision.collision) {
-      // Game over - create wireframes for the next game before ending this one
-      createWireframesForNextGame();
-      gameOver("GAME OVER - " + playerCollision.reason.toUpperCase());
-      return;
-    }
-    
-    // Check powerup collections
-    const powerupCollisions = checkPowerupCollisions();
-    const processedPowerups = new Set(); // Track processed powerups to avoid duplicates
-    
-    for (const collision of powerupCollisions) {
-      // Skip if this powerup was already processed (avoid duplicates)
-      if (processedPowerups.has(collision.index)) continue;
-      processedPowerups.add(collision.index);
-      
-      if (collision.type === 'player') {
-        // Player collects powerup
-        RENDERER.scene.remove(collision.powerup);
-        if (collision.powerup.userData && collision.powerup.userData.light) {
-          RENDERER.scene.remove(collision.powerup.userData.light);
-        }
-        POWERUPS.items.splice(collision.index, 1);
-        PLAYER.tailLength += 5;
-        PLAYER.score += 1;
-        updateScore();
-        setTimeout(createPowerup, 2000);
-      } else if (collision.type === 'ai') {
-        // AI collects powerup
-        RENDERER.scene.remove(collision.powerup);
-        if (collision.powerup.userData && collision.powerup.userData.light) {
-          RENDERER.scene.remove(collision.powerup.userData.light);
-        }
-        POWERUPS.items.splice(collision.index, 1);
-        collision.ai.userData.tailLength += 5;
-        // Use standalone function, not through AI object
-        if (typeof learnFromSuccess === 'function') {
-          learnFromSuccess(collision.ai);
-        } else if (typeof AI.learnFromSuccess === 'function') {
-          AI.learnFromSuccess(collision.ai);
-        } else {
-          console.warn('learnFromSuccess function not found');
-        }
-        setTimeout(createPowerup, 2000);
-      }
-    }
-    
-    // Check portal interactions
-    const portalInteractions = checkPortalCollisions();
-    for (const interaction of portalInteractions) {
-      if (interaction.interaction === 'teleport') {
-        handlePortalTeleport(interaction.type);
-      }
-    }
-    
-    // Process AI collisions in a separate loop
-    // Use a map to track which AIs have already been processed
+  }
+  
+  // Check player collisions (this is critical and should run every frame)
+  const playerCollision = checkPlayerCollisions();
+  if (playerCollision.collision) {
+    createWireframesForNextGame();
+    gameOver("GAME OVER - " + playerCollision.reason.toUpperCase());
+    return;
+  }
+  
+  // For AI collision checks, we can be more efficient
+  // Run these checks less frequently as they're less critical
+  if (RENDERER.clock.getElapsedTime() % 3 < 1) {
+    // Process AI collisions
     const processedAIs = new Map();
     
     for (let i = 0; i < AI.bikes.length; i++) {
       const aiBike = AI.bikes[i];
       if (!aiBike || !aiBike.position || processedAIs.has(aiBike)) continue;
       
+      // Quick distance check before detailed collision
+      const playerDistance = aiBike.position.distanceTo(PLAYER.bike.position);
+      if (playerDistance > 50) {
+        // Only do detailed collision if within reasonable distance
+        continue;
+      }
+      
       const aiCollision = checkAICollisions(aiBike);
       
       if (aiCollision.collision) {
         processedAIs.set(aiBike, true);
         try {
-          // Use standalone function, not through AI object
           if (typeof learnFromCrash === 'function') {
             learnFromCrash(aiBike, aiCollision.reason);
           } else if (typeof AI.learnFromCrash === 'function') {
             AI.learnFromCrash(aiBike, aiCollision.reason);
           } else {
-            // Fallback: call respawnAI directly if available
             if (typeof respawnAI === 'function') {
-                respawnAI(aiBike);
-              } else if (typeof AI.respawnAI === 'function') {
-                AI.respawnAI(aiBike);
-              } else {
-                console.warn('No AI respawn function found');
-              }
+              respawnAI(aiBike);
+            } else if (typeof AI.respawnAI === 'function') {
+              AI.respawnAI(aiBike);
             }
-          } catch (e) {
-            console.error("Error in AI crash handling:", e);
           }
+        } catch (e) {
+          console.error("Error in AI crash handling:", e);
         }
       }
     }
+  }
+  
+  // Process powerups with throttling
+  const powerupCollisions = checkPowerupCollisions();
+  processPowerupCollisions(powerupCollisions);
+}
     
     // Create wireframe visualizers for the NEXT game based on current obstacles
     function createWireframesForNextGame() {
