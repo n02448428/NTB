@@ -5,7 +5,7 @@
     // Configuration - REPLACE THESE VALUES with your actual credentials
     const CONFIG = {
       // Google Sheets configuration
-      appScriptUrl: 'https://script.google.com/macros/s/AKfycbwnhyUcqvJ08hJH96Gq8mT6ueaVvx4LTG_mAD06RUndnpoHSB30gty_slSDnF6GM0iJoA/exec', // Replace with your deployed Apps Script URL
+      appScriptUrl: 'https://script.google.com/macros/s/AKfycbwnhyUcqvJ08hJH96Gq8mT6ueaVvx4LTG_mAD06RUndnpoHSB30gty_slSDnF6GM0iJoA/exec',
       apiKey: 'dam-9789', // Replace with the API key you set in your Apps Script
       
       // Storage keys for local fallback
@@ -79,122 +79,170 @@
       localStorage.setItem(CONFIG.storageKey, JSON.stringify(scores));
     }
     
-    // Fetch scores from Google Sheets
+    // Fetch scores from Google Sheets using JSONP to avoid CORS issues
     function fetchScores() {
-      return fetch(CONFIG.appScriptUrl + '?action=getScores')
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (data.success && data.data) {
-            const scores = data.data.slice(1); // Skip header row
-            
-            const parsedScores = scores.map(row => ({
-              name: row[1] || 'Anonymous',
-              score: parseInt(row[2], 10) || 0,
-              date: row[3] || ''
-            }));
-            
-            console.log("[LEADERBOARD] Fetched scores:", parsedScores.length);
-            
-            // Update global scores
-            leaderboardScores = parsedScores;
-            
-            // Save to local storage as fallback
-            saveLocalScores(parsedScores);
-            
-            // Update UI if leaderboard is visible
-            if (document.getElementById('leaderboardOverlay').style.display === 'flex') {
-              updateLeaderboardUI();
+      console.log("[LEADERBOARD] Fetching scores from", CONFIG.appScriptUrl);
+      
+      // Use a JSONP-like approach with a callback parameter
+      const callbackName = 'leaderboardCallback_' + Math.random().toString(36).substring(2, 15);
+      const url = CONFIG.appScriptUrl + '?action=getScores&callback=' + callbackName;
+      
+      return new Promise((resolve, reject) => {
+        // Create a temporary callback function in the global scope
+        window[callbackName] = function(data) {
+          try {
+            if (data.success && data.data) {
+              const scores = data.data.slice(1); // Skip header row
+              
+              const parsedScores = scores.map(row => ({
+                name: row[1] || 'Anonymous',
+                score: parseInt(row[2], 10) || 0,
+                date: row[3] || ''
+              }));
+              
+              console.log("[LEADERBOARD] Fetched scores:", parsedScores.length);
+              
+              // Update global scores
+              leaderboardScores = parsedScores;
+              
+              // Save to local storage as fallback
+              saveLocalScores(parsedScores);
+              
+              // Clean up
+              delete window[callbackName];
+              document.head.removeChild(script);
+              
+              // Update UI if leaderboard is visible
+              if (document.getElementById('leaderboardOverlay').style.display === 'flex') {
+                updateLeaderboardUI();
+              }
+              
+              resolve(parsedScores);
+            } else {
+              console.error("[LEADERBOARD] Invalid data format from server");
+              fallbackToLocalScores();
+              reject(new Error("Invalid data format from server"));
             }
-            
-            return parsedScores;
+          } catch (e) {
+            console.error("[LEADERBOARD] Error processing scores data:", e);
+            fallbackToLocalScores();
+            reject(e);
           }
-          
-          throw new Error("Invalid data format from server");
-        })
-        .catch(error => {
-          console.error("[LEADERBOARD] Error fetching scores:", error);
-          
-          // Fall back to local storage
-          console.log("[LEADERBOARD] Using local scores as fallback");
-          leaderboardScores = loadLocalScores();
-          
-          // Update UI if leaderboard is visible
-          if (document.getElementById('leaderboardOverlay').style.display === 'flex') {
-            updateLeaderboardUI();
-          }
-          
-          return leaderboardScores;
-        });
+        };
+        
+        // Create script element
+        const script = document.createElement('script');
+        script.src = url;
+        
+        // Handle errors
+        script.onerror = function() {
+          console.error("[LEADERBOARD] Error loading scores");
+          fallbackToLocalScores();
+          delete window[callbackName];
+          document.head.removeChild(script);
+          reject(new Error("Failed to load scores"));
+        };
+        
+        // Set a timeout
+        const timeoutId = setTimeout(function() {
+          console.error("[LEADERBOARD] Timeout loading scores");
+          fallbackToLocalScores();
+          delete window[callbackName];
+          document.head.removeChild(script);
+          reject(new Error("Timeout loading scores"));
+        }, 5000);
+        
+        // Add the script to the page
+        document.head.appendChild(script);
+      });
     }
     
-    // Submit score to Google Sheets
+    // Fallback to local scores when server fails
+    function fallbackToLocalScores() {
+      console.log("[LEADERBOARD] Using local scores as fallback");
+      leaderboardScores = loadLocalScores();
+      
+      // Update UI if leaderboard is visible
+      if (document.getElementById('leaderboardOverlay').style.display === 'flex') {
+        updateLeaderboardUI();
+      }
+    }
+    
+    // Submit score to Google Sheets using a form post to avoid CORS issues
     function submitScore(name, score) {
       const date = new Date().toLocaleDateString();
       
-      const data = {
-        action: 'submitScore',
-        apiKey: CONFIG.apiKey,
-        timestamp: new Date().toISOString(),
-        name: name,
-        score: score,
-        date: date
-      };
+      console.log("[LEADERBOARD] Submitting score to Google Sheets:", score, "for", name);
       
-      return fetch(CONFIG.appScriptUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data)
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
+      // Create an invisible iframe to submit the form
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      document.body.appendChild(iframe);
+      
+      // Create a form inside the iframe
+      const iframeDoc = iframe.contentDocument || iframe.contentWindow.document;
+      iframeDoc.open();
+      iframeDoc.write(`
+        <html>
+        <body>
+          <form id="scoreForm" method="post" action="${CONFIG.appScriptUrl}" target="_blank">
+            <input type="hidden" name="action" value="submitScore">
+            <input type="hidden" name="apiKey" value="${CONFIG.apiKey}">
+            <input type="hidden" name="timestamp" value="${new Date().toISOString()}">
+            <input type="hidden" name="name" value="${name}">
+            <input type="hidden" name="score" value="${score}">
+            <input type="hidden" name="date" value="${date}">
+          </form>
+          <script>
+            document.getElementById('scoreForm').submit();
+            setTimeout(function() {
+              window.parent.postMessage('scoreSubmitted', '*');
+            }, 1000);
+          </script>
+        </body>
+        </html>
+      `);
+      iframeDoc.close();
+      
+      // Listen for completion message
+      window.addEventListener('message', function scoreSubmitHandler(event) {
+        if (event.data === 'scoreSubmitted') {
+          console.log("[LEADERBOARD] Score submission completed");
+          
+          // Clean up
+          window.removeEventListener('message', scoreSubmitHandler);
+          setTimeout(function() {
+            document.body.removeChild(iframe);
+          }, 1000);
+          
+          // Refresh scores after a delay
+          setTimeout(function() {
+            fetchScores();
+          }, 2000);
         }
-        return response.json();
-      })
-      .then(result => {
-        if (result.success) {
-          console.log("[LEADERBOARD] Score submitted successfully");
-          // Refresh scores from server
-          return fetchScores();
-        } else {
-          console.error("[LEADERBOARD] Error submitting score:", result.error);
-          throw new Error(result.error || "Unknown error");
-        }
-      })
-      .catch(error => {
-        console.error("[LEADERBOARD] Error submitting score:", error);
-        
-        // Fall back to local storage
-        const newScore = { name, score, date };
-        
-        // Add to local scores
-        leaderboardScores.push(newScore);
-        
-        // Sort by score (highest first)
-        leaderboardScores.sort((a, b) => b.score - a.score);
-        
-        // Keep only top 50
-        if (leaderboardScores.length > 50) {
-          leaderboardScores = leaderboardScores.slice(0, 50);
-        }
-        
-        // Save to local storage
-        saveLocalScores(leaderboardScores);
-        
-        // Update UI if leaderboard is visible
-        if (document.getElementById('leaderboardOverlay').style.display === 'flex') {
-          updateLeaderboardUI();
-        }
-        
-        return Promise.resolve(false);
       });
+      
+      // Add to local scores immediately
+      const newScore = { name, score, date };
+      
+      // Add to local scores
+      leaderboardScores.push(newScore);
+      
+      // Sort by score (highest first)
+      leaderboardScores.sort((a, b) => b.score - a.score);
+      
+      // Keep only top 50
+      if (leaderboardScores.length > 50) {
+        leaderboardScores = leaderboardScores.slice(0, 50);
+      }
+      
+      // Save to local storage
+      saveLocalScores(leaderboardScores);
+      
+      // Update UI if leaderboard is visible
+      if (document.getElementById('leaderboardOverlay').style.display === 'flex') {
+        updateLeaderboardUI();
+      }
     }
     
     // Add a score to the leaderboard
@@ -202,10 +250,7 @@
       console.log("[LEADERBOARD] Adding score:", score, "for player:", name);
       
       // Submit score to Google Sheets
-      submitScore(name, score)
-        .then(success => {
-          console.log("[LEADERBOARD] Score added to leaderboard", success ? "successfully" : "with fallback");
-        });
+      submitScore(name, score);
       
       return true;
     }
@@ -277,8 +322,8 @@
       
       if (!currentlyVisible) {
         // When showing, refresh from server
-        fetchScores().then(() => {
-          updateLeaderboardUI();
+        fetchScores().catch(error => {
+          console.error("[LEADERBOARD] Error fetching scores:", error);
         });
       }
     }
