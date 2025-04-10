@@ -132,39 +132,12 @@ const LEADERBOARD = {
   
   // Fallback to local data if the server can't be reached
   fallbackToLocalMode: function() {
-    // Generate some sample scores if none exist
-    if (this.topScores.length === 0) {
-      this.generateSampleScores();
-    }
+    // Start with empty leaderboard - no sample scores
+    this.topScores = [];
   },
   
-  // Generate sample scores for testing/fallback
-  generateSampleScores: function() {
-    this.topScores = [];
-    
-    const names = ['CyberRacer', 'NeonRider', 'GridMaster', 'LightCycle', 'ByteRunner', 
-                   'PixelDrift', 'GlitchHunter', 'WaveRider', 'SynthDriver', 'RetroRacer'];
-    
-    for (let i = 0; i < 50; i++) {
-      const randomName = names[Math.floor(Math.random() * names.length)];
-      const randomScore = Math.floor(Math.random() * 1000) + 100;
-      
-      // Generate a random date within the last 30 days
-      const randomDaysAgo = Math.floor(Math.random() * 30);
-      const date = new Date();
-      date.setDate(date.getDate() - randomDaysAgo);
-      
-      this.topScores.push({
-        timestamp: date.toISOString(),
-        name: randomName,
-        score: randomScore,
-        date: date.toLocaleDateString()
-      });
-    }
-    
-    // Sort by score (descending)
-    this.topScores.sort((a, b) => b.score - a.score);
-  },
+  // Generate sample scores for testing/fallback - REMOVED, no more sample scores
+
   
   // Submit a new score to the leaderboard
   submitScore: function(playerName, score) {
