@@ -1,11 +1,11 @@
-/* ------------------ LEADERBOARD SYSTEM ------------------ */
+/* ------------------ LEADERBOARD SYSTEM WITH DEBUG ------------------ */
 
 // Leaderboard configuration - REPLACE THESE VALUES with your actual credentials
 const LEADERBOARD = {
     // Google Sheets configuration - YOU MUST CONFIGURE THESE
     config: {
       // The URL to your deployed Google Apps Script
-      appScriptUrl: 'https://script.google.com/macros/s/AKfycbwnhyUcqvJ08hJH96Gq8mT6ueaVvx4LTG_mAD06RUndnpoHSB30gty_slSDnF6GM0iJoA/exec',
+      appScriptUrl: 'https://script.google.com/macros/library/d/1IMKJ9tS8HdM04V-mTj9Vj95JQFk2nyeuyN9LH4dHtx2gJ7fbx9LBP2Yg/4https://script.google.com/macros/s/AKfycbwnhyUcqvJ08hJH96Gq8mT6ueaVvx4LTG_mAD06RUndnpoHSB30gty_slSDnF6GM0iJoA/exec',
       // A secret key that matches what you set in your Apps Script
       apiKey: 'dam-9789'
     },
@@ -34,7 +34,7 @@ const LEADERBOARD = {
     
     // Initialize the leaderboard system
     initialize: function() {
-      console.log('Initializing leaderboard system...');
+      console.log('[LEADERBOARD] Initializing leaderboard system...');
       
       // Load personal scores from local storage
       this.loadPersonalScores();
@@ -43,112 +43,113 @@ const LEADERBOARD = {
       this.createLeaderboardButton();
       this.createLeaderboardOverlay();
       
-      // Fetch leaderboard data
-      this.fetchLeaderboardData();
-      
-      // Hook into the game over function for score submission
+      // Setup game over hook immediately
       this.setupGameOverHook();
       
-      console.log('Leaderboard system initialized');
+      // Direct hook into PLAYER object to watch for score changes
+      this.setupPlayerWatcher();
+      
+      // Fallback to local mode for now
+      this.fallbackToLocalMode();
+      
+      console.log('[LEADERBOARD] Initialization complete');
+      
+      // Check existing scores
+      console.log('[LEADERBOARD] Current topScores:', this.topScores);
+      console.log('[LEADERBOARD] Current personalScores:', this.personalScores);
     },
     
-    // Setup hook for game over to submit scores - fixes the redeclaration error
-    setupGameOverHook: function() {
-      // Only set up the hook if it hasn't been set up already
-      if (typeof window._originalGameOver === 'undefined') {
-        // Store the original gameOver function
-        window._originalGameOver = window.gameOver;
+    // Watch PLAYER object for changes
+    setupPlayerWatcher: function() {
+      console.log('[LEADERBOARD] Setting up player watcher');
+      
+      // Check if PLAYER exists
+      if (window.PLAYER) {
+        console.log('[LEADERBOARD] PLAYER object found:', window.PLAYER);
         
-        // Replace with our version that hooks into leaderboard
-        window.gameOver = function(message) {
-          // Get score before calling original (in case it gets reset)
-          let currentScore = 0;
-          let playerNameToUse = 'Anonymous';
-          
-          if (PLAYER && typeof PLAYER.score !== 'undefined') {
-            currentScore = PLAYER.score;
-            playerNameToUse = window.playerName || localStorage.getItem('neonTrailblazerPlayerName') || 'Anonymous';
+        // Set interval to periodically check if player score changes
+        setInterval(() => {
+          if (window.PLAYER && typeof window.PLAYER.score !== 'undefined' && window.CONFIG && window.CONFIG.STATE) {
+            // Only log when game is over to avoid spam
+            if (window.CONFIG.STATE.isGameOver) {
+              console.log('[LEADERBOARD] Current player score:', window.PLAYER.score);
+            }
           }
-          
-          // Call the original gameOver function
-          if (window._originalGameOver) {
-            window._originalGameOver(message);
-          }
-          
-          // Submit the score to the leaderboard - always submit, even if 0
-          console.log(`Game over detected, submitting score: ${currentScore}`);
-          LEADERBOARD.submitScore(playerNameToUse, currentScore);
-        };
-        
-        console.log('Game over hook set up successfully');
+        }, 1000); // Check every second
+      } else {
+        console.log('[LEADERBOARD] PLAYER object not found, will retry');
+        setTimeout(() => this.setupPlayerWatcher(), 2000);
       }
     },
     
-    // Fetch leaderboard data from Google Apps Script
-    fetchLeaderboardData: function() {
-      this.ui.loading = true;
-      this.ui.error = null;
-      this.updateLeaderboardUI();
+    // Setup hook for game over to submit scores
+    setupGameOverHook: function() {
+      console.log('[LEADERBOARD] Setting up game over hook');
       
-      // For now, use sample data until you set up the Google Sheet
-      this.fallbackToLocalMode();
-      this.ui.loading = false;
-      this.updateLeaderboardUI();
+      // Store a reference to this for closures
+      const self = this;
       
-      // Uncomment this when you have the appScriptUrl set up
-      /*
-      fetch(this.config.appScriptUrl + '?action=getScores')
-        .then(response => {
-          if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
-          }
-          return response.json();
-        })
-        .then(data => {
-          if (data.success && data.data) {
-            // Parse scores and sort by score (descending)
-            const scores = data.data.slice(1); // Skip header row
-            
-            this.topScores = scores.map(row => ({
-              timestamp: row[0] || '',
-              name: row[1] || 'Anonymous',
-              score: parseInt(row[2], 10) || 0,
-              date: row[3] || '',
-            })).sort((a, b) => b.score - a.score);
-            
-            console.log('Leaderboard data loaded:', this.topScores);
+      // Direct hook into the window.gameOver function
+      const originalGameOver = window.gameOver;
+      window.gameOver = function(message) {
+        console.log('[LEADERBOARD] Game over detected with message:', message);
+        
+        // Capture score and name before potential reset
+        let score = 0;
+        let name = 'Anonymous';
+        
+        if (window.PLAYER && typeof window.PLAYER.score !== 'undefined') {
+          score = window.PLAYER.score;
+          console.log('[LEADERBOARD] Captured score:', score);
+          
+          // Try different ways to get player name
+          if (window.playerName) {
+            name = window.playerName;
+            console.log('[LEADERBOARD] Using window.playerName:', name);
+          } else if (localStorage.getItem('neonTrailblazerPlayerName')) {
+            name = localStorage.getItem('neonTrailblazerPlayerName');
+            console.log('[LEADERBOARD] Using stored player name:', name);
           } else {
-            this.topScores = [];
-            console.warn('No leaderboard data found or unexpected format');
+            console.log('[LEADERBOARD] No player name found, using Anonymous');
           }
-          
-          this.ui.loading = false;
-          this.updateLeaderboardUI();
-        })
-        .catch(error => {
-          console.error('Error fetching leaderboard data:', error);
-          this.ui.loading = false;
-          this.ui.error = `Failed to load leaderboard. Using local data only.`;
-          
-          // Fallback to local data only mode
-          this.fallbackToLocalMode();
-          this.updateLeaderboardUI();
-        });
-      */
+        } else {
+          console.log('[LEADERBOARD] PLAYER object or score not found');
+          console.log('[LEADERBOARD] PLAYER:', window.PLAYER);
+        }
+        
+        // Call original game over function
+        if (originalGameOver) {
+          console.log('[LEADERBOARD] Calling original gameOver function');
+          originalGameOver(message);
+        } else {
+          console.log('[LEADERBOARD] Original gameOver function not found');
+        }
+        
+        // Submit score - even if it's 0, for testing
+        console.log('[LEADERBOARD] Submitting score:', score, 'for player:', name);
+        self.submitScore(name, score);
+      };
+      
+      console.log('[LEADERBOARD] Game over hook installed');
+      
+      // Add an additional hook for gameOver in window scope
+      window.LEADERBOARD_submitScore = function(name, score) {
+        console.log('[LEADERBOARD] Manual score submission:', score, 'for player:', name);
+        self.submitScore(name, score);
+      };
+      console.log('[LEADERBOARD] Added window.LEADERBOARD_submitScore function for manual testing');
     },
     
     // Fallback to local data if the server can't be reached
     fallbackToLocalMode: function() {
-      // Start with empty leaderboard - no sample scores
+      console.log('[LEADERBOARD] Using local data mode');
+      // Start with empty leaderboard
       this.topScores = [];
     },
     
-    // Generate sample scores for testing/fallback - REMOVED, no more sample scores
-  
-    
     // Submit a new score to the leaderboard
     submitScore: function(playerName, score) {
-      console.log(`Submitting score: ${score} for player: ${playerName}`);
+      console.log('[LEADERBOARD] submitScore called with:', playerName, score);
       
       // Add to personal scores
       const timestamp = new Date().toISOString();
@@ -159,14 +160,17 @@ const LEADERBOARD = {
         name: playerName,
         score: score,
         date: dateStr,
-        isHighScore: true // All scores are considered high scores at first
+        isHighScore: true // All scores are high scores initially
       };
+      
+      console.log('[LEADERBOARD] Created score object:', scoreObj);
       
       // Update session stats
       this.updatePlayerStats(score);
       
       // Add to personal scores
       this.personalScores.unshift(scoreObj);
+      console.log('[LEADERBOARD] Added to personal scores, new count:', this.personalScores.length);
       
       // Keep only the latest 100 scores
       if (this.personalScores.length > 100) {
@@ -176,88 +180,52 @@ const LEADERBOARD = {
       // Save to local storage
       this.savePersonalScores();
       
-      // ALWAYS add to topScores initially - will be sorted and trimmed to top 50
+      // ALWAYS add to topScores
+      console.log('[LEADERBOARD] Adding to top scores');
       this.topScores.push({...scoreObj});
       this.topScores.sort((a, b) => b.score - a.score);
+      
+      // Keep only top 50
       if (this.topScores.length > 50) {
         this.topScores = this.topScores.slice(0, 50);
       }
       
-      // Uncomment this when you have the server set up
-      /*
-      this.submitScoreToServer(scoreObj).then(success => {
-        if (success) {
-          this.fetchLeaderboardData(); // Refresh leaderboard data
-        }
-      });
-      */
+      console.log('[LEADERBOARD] New top scores count:', this.topScores.length);
+      console.log('[LEADERBOARD] Top scores updated:', this.topScores);
       
       // Update the UI if leaderboard is visible
       if (this.ui.visible) {
+        console.log('[LEADERBOARD] Updating UI (visible)');
         this.updateLeaderboardUI();
+      } else {
+        console.log('[LEADERBOARD] Not updating UI (not visible)');
       }
       
-      console.log(`Score ${score} added to leaderboard for ${playerName}`);
       return true;
-    },
-    
-    // Submit a score to the server
-    submitScoreToServer: function(scoreObj) {
-      const data = {
-        action: 'submitScore',
-        apiKey: this.config.apiKey,
-        timestamp: scoreObj.timestamp,
-        name: scoreObj.name,
-        score: scoreObj.score,
-        date: scoreObj.date
-      };
-      
-      return fetch(this.config.appScriptUrl, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(data),
-      })
-      .then(response => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! Status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then(result => {
-        if (result.success) {
-          console.log('Score submitted successfully');
-          return true;
-        } else {
-          console.error('Failed to submit score:', result.error);
-          return false;
-        }
-      })
-      .catch(error => {
-        console.error('Error submitting score:', error);
-        return false;
-      });
     },
     
     // Load personal scores from local storage
     loadPersonalScores: function() {
+      console.log('[LEADERBOARD] Loading personal scores from storage');
       const savedScores = localStorage.getItem(this.storageKeys.personalScores);
       if (savedScores) {
         try {
           this.personalScores = JSON.parse(savedScores);
+          console.log('[LEADERBOARD] Loaded personal scores:', this.personalScores.length);
           this.calculatePlayerStats();
         } catch (e) {
-          console.error('Error parsing saved scores:', e);
+          console.error('[LEADERBOARD] Error parsing saved scores:', e);
           this.personalScores = [];
         }
       } else {
+        console.log('[LEADERBOARD] No personal scores found in storage');
         this.personalScores = [];
       }
     },
     
     // Save personal scores to local storage
     savePersonalScores: function() {
+      console.log('[LEADERBOARD] Saving personal scores to storage, count:', this.personalScores.length);
       localStorage.setItem(
         this.storageKeys.personalScores, 
         JSON.stringify(this.personalScores)
@@ -266,8 +234,10 @@ const LEADERBOARD = {
     
     // Reset personal scores
     resetPersonalScores: function() {
-      if (confirm('Are you sure you want to reset your personal score history?')) {
+      if (confirm('Are you sure you want to reset all scores? This will clear both personal and leaderboard data.')) {
+        console.log('[LEADERBOARD] Resetting all scores');
         this.personalScores = [];
+        this.topScores = [];
         this.playerStats = {
           sessionHighScore: 0,
           lastScore: 0,
@@ -281,6 +251,7 @@ const LEADERBOARD = {
     
     // Calculate player statistics
     calculatePlayerStats: function() {
+      console.log('[LEADERBOARD] Calculating player stats from', this.personalScores.length, 'scores');
       if (this.personalScores.length === 0) {
         this.playerStats = {
           sessionHighScore: 0,
@@ -308,10 +279,13 @@ const LEADERBOARD = {
         averageScore: Math.round(totalScore / this.personalScores.length),
         gamesPlayed: this.personalScores.length,
       };
+      
+      console.log('[LEADERBOARD] Player stats calculated:', this.playerStats);
     },
     
     // Update player stats with a new score
     updatePlayerStats: function(score) {
+      console.log('[LEADERBOARD] Updating player stats with score:', score);
       this.playerStats.lastScore = score;
       this.playerStats.gamesPlayed++;
       
@@ -322,22 +296,29 @@ const LEADERBOARD = {
       // Recalculate average
       const totalScores = this.personalScores.reduce((sum, s) => sum + s.score, 0) + score;
       this.playerStats.averageScore = Math.round(totalScores / this.playerStats.gamesPlayed);
+      
+      console.log('[LEADERBOARD] Updated player stats:', this.playerStats);
     },
     
     // Show/hide the leaderboard
     toggleLeaderboard: function() {
+      console.log('[LEADERBOARD] Toggling leaderboard visibility');
       this.ui.visible = !this.ui.visible;
-      if (this.ui.visible) {
-        // Refresh leaderboard data when showing
-        this.fetchLeaderboardData();
-      }
+      
+      console.log('[LEADERBOARD] Leaderboard visible:', this.ui.visible);
+      console.log('[LEADERBOARD] Current top scores count:', this.topScores.length);
+      
+      // Always update UI when toggling
       this.updateLeaderboardUI();
     },
     
     // Create the leaderboard button
     createLeaderboardButton: function() {
+      console.log('[LEADERBOARD] Creating leaderboard button');
+      
       // Check if button already exists
       if (document.getElementById('leaderboardButton')) {
+        console.log('[LEADERBOARD] Button already exists');
         return;
       }
       
@@ -346,7 +327,7 @@ const LEADERBOARD = {
       button.textContent = 'LEADERBOARD';
       button.className = 'game-button';
       
-      // Position it next to the EFX button
+      // Position it near the EFX button
       button.style.position = 'fixed';
       button.style.top = '10px';
       button.style.left = '90px';
@@ -362,17 +343,24 @@ const LEADERBOARD = {
       button.style.fontFamily = "'Courier New', monospace";
       button.style.cursor = 'pointer';
       
-      button.addEventListener('click', () => this.toggleLeaderboard());
+      // Bind to this object's toggleLeaderboard
+      const self = this;
+      button.addEventListener('click', function() {
+        self.toggleLeaderboard();
+      });
       
       document.body.appendChild(button);
       
-      console.log('Leaderboard button created and added to the DOM');
+      console.log('[LEADERBOARD] Button created and added to DOM');
     },
     
     // Create the leaderboard overlay
     createLeaderboardOverlay: function() {
+      console.log('[LEADERBOARD] Creating leaderboard overlay');
+      
       // Check if overlay already exists
       if (document.getElementById('leaderboardOverlay')) {
+        console.log('[LEADERBOARD] Overlay already exists');
         return;
       }
       
@@ -405,7 +393,7 @@ const LEADERBOARD = {
               </div>
               <div id="leaderboardScoresList" style="overflow-y: auto; max-height: 50vh; padding-right: 10px;">
                 <!-- Scores will be inserted here -->
-                <div style="text-align: center; padding: 20px; color: #0ff;">Loading leaderboard data...</div>
+                <div style="text-align: center; padding: 20px; color: #0ff;">No scores yet. Be the first to make the leaderboard!</div>
               </div>
             </div>
             <div style="flex: 1; padding: 0 15px; border-left: 1px solid rgba(0, 255, 255, 0.3); display: flex; flex-direction: column;">
@@ -426,7 +414,10 @@ const LEADERBOARD = {
                 <div style="color: #0ff;">Games Played:</div>
                 <div id="gamesPlayed" style="font-weight: bold; color: #fff; text-shadow: 0 0 5px #0ff;">0</div>
               </div>
-              <button id="resetPersonalScores" style="margin-top: auto; padding: 8px 15px; background: transparent; border: 1px solid #ff3366; color: #ff3366; cursor: pointer; transition: all 0.2s; font-family: 'Courier New', monospace; text-shadow: 0 0 5px #ff3366; font-size: 14px;">Reset Personal Data</button>
+              <button id="resetPersonalScores" style="margin-top: auto; padding: 8px 15px; background: transparent; border: 1px solid #ff3366; color: #ff3366; cursor: pointer; transition: all 0.2s; font-family: 'Courier New', monospace; text-shadow: 0 0 5px #ff3366; font-size: 14px;">Reset All Scores</button>
+              
+              <!-- For debugging -->
+              <button id="addDebugScore" style="margin-top: 10px; padding: 8px 15px; background: transparent; border: 1px solid #ffaa00; color: #ffaa00; cursor: pointer; transition: all 0.2s; font-family: 'Courier New', monospace; text-shadow: 0 0 5px #ffaa00; font-size: 14px;">Add Test Score</button>
             </div>
           </div>
           <button id="closeLeaderboard" style="margin-top: 20px; align-self: center; padding: 10px 30px; font-size: 16px; background: transparent; border: 2px solid #0ff; color: #0ff; cursor: pointer; transition: all 0.2s; font-family: 'Courier New', monospace; text-shadow: 0 0 5px #0ff;">CLOSE</button>
@@ -435,50 +426,66 @@ const LEADERBOARD = {
       
       document.body.appendChild(overlay);
       
-      // Add event listeners
-      document.getElementById('closeLeaderboard').addEventListener('click', () => this.toggleLeaderboard());
-      document.getElementById('resetPersonalScores').addEventListener('click', () => this.resetPersonalScores());
+      // Add event listeners with proper binding to this object
+      const self = this;
+      document.getElementById('closeLeaderboard').addEventListener('click', function() {
+        self.toggleLeaderboard();
+      });
       
-      console.log('Leaderboard overlay created and added to the DOM');
+      document.getElementById('resetPersonalScores').addEventListener('click', function() {
+        self.resetPersonalScores();
+      });
+      
+      // Debug button
+      document.getElementById('addDebugScore').addEventListener('click', function() {
+        const playerName = window.playerName || localStorage.getItem('neonTrailblazerPlayerName') || 'DebugPlayer';
+        const debugScore = Math.floor(Math.random() * 1000);
+        console.log('[LEADERBOARD] Adding debug score:', debugScore);
+        self.submitScore(playerName, debugScore);
+        self.updateLeaderboardUI();
+      });
+      
+      console.log('[LEADERBOARD] Overlay created and added to DOM');
     },
     
     // Update the leaderboard UI
     updateLeaderboardUI: function() {
+      console.log('[LEADERBOARD] Updating leaderboard UI');
+      console.log('[LEADERBOARD] Current top scores:', this.topScores);
+      
       const overlay = document.getElementById('leaderboardOverlay');
-      if (!overlay) return;
+      if (!overlay) {
+        console.log('[LEADERBOARD] Overlay not found');
+        return;
+      }
       
       // Show/hide the overlay
       overlay.style.display = this.ui.visible ? 'flex' : 'none';
       
-      if (!this.ui.visible) return;
-      
-      // Update scores list
-      const scoresList = document.getElementById('leaderboardScoresList');
-      
-      if (this.ui.loading) {
-        scoresList.innerHTML = '<div style="text-align: center; padding: 20px; color: #0ff;">Loading leaderboard data...</div>';
+      if (!this.ui.visible) {
+        console.log('[LEADERBOARD] Overlay hidden, not updating content');
         return;
       }
       
-      if (this.ui.error) {
-        scoresList.innerHTML = `<div style="text-align: center; padding: 20px; color: #ff3366;">${this.ui.error}</div>`;
-        
-        // But still show scores if we have them
-        if (this.topScores.length > 0) {
-          scoresList.innerHTML += '<div style="text-align: center; padding: 10px; color: #ffaa00;">Showing cached data:</div>';
-        } else {
-          return;
-        }
+      // Update scores list
+      const scoresList = document.getElementById('leaderboardScoresList');
+      if (!scoresList) {
+        console.log('[LEADERBOARD] Scores list element not found');
+        return;
       }
+      
+      console.log('[LEADERBOARD] Rendering scores list with', this.topScores.length, 'scores');
       
       // Render top scores
       let scoresHTML = '';
       
       if (this.topScores.length === 0) {
+        console.log('[LEADERBOARD] No scores to display');
         scoresHTML = '<div style="text-align: center; padding: 20px; color: #0ff;">No scores yet. Be the first to make the leaderboard!</div>';
       } else {
         // Get current player name
         const currentPlayerName = window.playerName || localStorage.getItem('neonTrailblazerPlayerName') || '';
+        console.log('[LEADERBOARD] Current player name:', currentPlayerName);
         
         this.topScores.forEach((score, index) => {
           const rank = index + 1;
@@ -513,20 +520,29 @@ const LEADERBOARD = {
         });
       }
       
+      console.log('[LEADERBOARD] Setting scores HTML');
       scoresList.innerHTML = scoresHTML;
       
       // Update player stats
-      document.getElementById('sessionHighScore').textContent = this.playerStats.sessionHighScore;
-      document.getElementById('lastScore').textContent = this.playerStats.lastScore;
-      document.getElementById('averageScore').textContent = this.playerStats.averageScore;
-      document.getElementById('gamesPlayed').textContent = this.playerStats.gamesPlayed;
+      const sessionHighScore = document.getElementById('sessionHighScore');
+      const lastScore = document.getElementById('lastScore');
+      const averageScore = document.getElementById('averageScore');
+      const gamesPlayed = document.getElementById('gamesPlayed');
+      
+      if (sessionHighScore) sessionHighScore.textContent = this.playerStats.sessionHighScore;
+      if (lastScore) lastScore.textContent = this.playerStats.lastScore;
+      if (averageScore) averageScore.textContent = this.playerStats.averageScore;
+      if (gamesPlayed) gamesPlayed.textContent = this.playerStats.gamesPlayed;
+      
+      console.log('[LEADERBOARD] UI update complete');
     }
   };
   
   // Initialize the leaderboard when the page loads
-  document.addEventListener('DOMContentLoaded', () => {
-    // Initialize after a short delay to ensure the game is fully loaded
-    setTimeout(() => {
-      LEADERBOARD.initialize();
-    }, 1000);
+  window.addEventListener('load', function() {
+    console.log('[LEADERBOARD] Window load event, initializing leaderboard');
+    LEADERBOARD.initialize();
+    
+    // Also create a global reference for debugging
+    window.LEADERBOARD_SYSTEM = LEADERBOARD;
   });
