@@ -6,7 +6,7 @@
   const CONFIG = {
     // Google Sheets configuration
     appScriptUrl: 'https://script.google.com/macros/s/AKfycbwnhyUcqvJ08hJH96Gq8mT6ueaVvx4LTG_mAD06RUndnpoHSB30gty_slSDnF6GM0iJoA/exec',
-    apiKey: 'YOUR_SECRET_API_KEY', // Replace with the API key you set in your Apps Script
+    apiKey: 'dam-9789', // Replace with the API key you set in your Apps Script
     
     // Storage keys for local fallback
     storageKey: 'neonTrailblazerLeaderboard'
