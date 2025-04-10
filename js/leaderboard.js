@@ -61,16 +61,23 @@ const LEADERBOARD = {
       
       // Replace with our version that hooks into leaderboard
       window.gameOver = function(message) {
+        // Get score before calling original (in case it gets reset)
+        let currentScore = 0;
+        let playerNameToUse = 'Anonymous';
+        
+        if (PLAYER && typeof PLAYER.score !== 'undefined') {
+          currentScore = PLAYER.score;
+          playerNameToUse = window.playerName || localStorage.getItem('neonTrailblazerPlayerName') || 'Anonymous';
+        }
+        
         // Call the original gameOver function
         if (window._originalGameOver) {
           window._originalGameOver(message);
         }
         
-        // Submit the score to the leaderboard
-        if (PLAYER && typeof PLAYER.score !== 'undefined') {
-          const playerNameToUse = window.playerName || localStorage.getItem('neonTrailblazerPlayerName') || 'Anonymous';
-          LEADERBOARD.submitScore(playerNameToUse, PLAYER.score);
-        }
+        // Submit the score to the leaderboard - always submit, even if 0
+        console.log(`Game over detected, submitting score: ${currentScore}`);
+        LEADERBOARD.submitScore(playerNameToUse, currentScore);
       };
       
       console.log('Game over hook set up successfully');
@@ -141,6 +148,8 @@ const LEADERBOARD = {
   
   // Submit a new score to the leaderboard
   submitScore: function(playerName, score) {
+    console.log(`Submitting score: ${score} for player: ${playerName}`);
+    
     // Add to personal scores
     const timestamp = new Date().toISOString();
     const dateStr = new Date().toLocaleDateString();
@@ -150,7 +159,7 @@ const LEADERBOARD = {
       name: playerName,
       score: score,
       date: dateStr,
-      isHighScore: false // Will be determined later
+      isHighScore: true // All scores are considered high scores at first
     };
     
     // Update session stats
@@ -167,34 +176,29 @@ const LEADERBOARD = {
     // Save to local storage
     this.savePersonalScores();
     
-    // Check if score is high enough for the leaderboard
-    const lowestTopScore = this.topScores.length >= 50 ? this.topScores[49].score : 0;
-    
-    if (score > lowestTopScore || this.topScores.length < 50) {
-      // Score is high enough to be on the leaderboard
-      scoreObj.isHighScore = true;
-      
-      // In local mode, add to topScores directly
-      this.topScores.push({...scoreObj});
-      this.topScores.sort((a, b) => b.score - a.score);
-      if (this.topScores.length > 50) {
-        this.topScores = this.topScores.slice(0, 50);
-      }
-      
-      // Uncomment this when you have the server set up
-      /*
-      this.submitScoreToServer(scoreObj).then(success => {
-        if (success) {
-          this.fetchLeaderboardData(); // Refresh leaderboard data
-        }
-      });
-      */
+    // ALWAYS add to topScores initially - will be sorted and trimmed to top 50
+    this.topScores.push({...scoreObj});
+    this.topScores.sort((a, b) => b.score - a.score);
+    if (this.topScores.length > 50) {
+      this.topScores = this.topScores.slice(0, 50);
     }
+    
+    // Uncomment this when you have the server set up
+    /*
+    this.submitScoreToServer(scoreObj).then(success => {
+      if (success) {
+        this.fetchLeaderboardData(); // Refresh leaderboard data
+      }
+    });
+    */
     
     // Update the UI if leaderboard is visible
     if (this.ui.visible) {
       this.updateLeaderboardUI();
     }
+    
+    console.log(`Score ${score} added to leaderboard for ${playerName}`);
+    return true;
   },
   
   // Submit a score to the server
