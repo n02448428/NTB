@@ -166,7 +166,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const creditText = document.getElementById('creditText');
     if (creditText) {
       // Make the entire area clickable
-      creditText.innerHTML = '<a id="creditTextLink" href="https://twitter.com/dmitrymakelove" target="_blank" style="display:block;text-decoration:none;color:inherit">made by <span style="color:#ff00ff;">@dmitrymakelove</span><br>(follow on X)</a>';
+      creditText.innerHTML = '<a id="creditTextLink" href="https://twitter.com/0dotdmtr" target="_blank" style="display:block;text-decoration:none;color:inherit">made by <span style="color:#ff00ff;">@0dotdmtr</span><br>(follow on X)</a>';
     }
   }, 1000);
 });
