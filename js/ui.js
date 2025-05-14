@@ -116,7 +116,7 @@ function updateTouchControlsDisplay() {
     const creditText = document.getElementById('creditText');
     if (creditText) {
       creditText.style.zIndex = '10001'; // Very high z-index
-      creditText.innerHTML = '<a id="creditTextLink" href="https://twitter.com/dmitrymakelove" target="_blank">made by <span style="color:#ff00ff;">@dmitrymakelove</span><br>(follow on X)</a>';
+      creditText.innerHTML = '<a id="creditTextLink" href="https://twitter.com/0dotdmtr" target="_blank">made by <span style="color:#ff00ff;">@0dotdmtr</span><br>(follow on X)</a>';
       
       const link = document.getElementById('creditTextLink');
       if (link) {
